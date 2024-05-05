@@ -31,7 +31,7 @@ CONCURRENT_REQUESTS =  15 # 10 for replit # 32
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+# COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -93,10 +93,10 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 
-# LOG_LEVEL='INFO'    # overview of program execution
+LOG_LEVEL='INFO'    # overview of program execution
 #LOG_LEVEL='DEBUG'   # detailed information about program execution
 #LOG_LEVEL='WARNING' # only show warnings and errors
-LOG_LEVEL='ERROR'   # only show errors
+# LOG_LEVEL='ERROR'   # only show errors
 #LOG_LEVEL='CRITICAL' # only show critical errors
 #LOG_LEVEL='NOTSET'  # show everything
 

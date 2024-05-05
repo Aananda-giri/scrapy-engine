@@ -1,7 +1,7 @@
 import langid
 import re
 import os, json, csv
-# import pandas as pd
+import pandas as pd
 
 import pybloom_live
 from pathlib import Path
@@ -110,76 +110,76 @@ def compress_file(input_file_path="nepali_news_dataset.csv",
       compressed_file.writelines(csv_file)
 
 
-# def save_nepali_paragraphs_to_csv(csv_file_name = "crawled_nepali_news_dataset.csv"):
-#   '''
-#     '''
-#   data_files = [
-#       file for file in os.listdir() if (file.endswith('.json')) and (
-#           file not in
-#           ['test.json', 'news_start_urls copy.json', 'news_start_urls.json'])
-#   ]
-#   for file in data_files:
-#     if remove_file_if_empty(file):
-#       continue
-#       # Removed empty file
-#     try:
-#       # load data from each file
-#       with open(file, 'r') as f:
-#         data = json.load(f)
-#     except:
-#       '''
-#                file is corrupt when scrapy is terminated while it is still crawling.
-#                while corrupt, file is terminated with: `{some_data},`
-#                adding : `""]` at the end of file to make it valid json file
+def save_nepali_paragraphs_to_csv(csv_file_name = "crawled_nepali_news_dataset.csv"):
+  '''
+    '''
+  data_files = [
+      file for file in os.listdir() if (file.endswith('.json')) and (
+          file not in
+          ['test.json', 'news_start_urls copy.json', 'news_start_urls.json'])
+  ]
+  for file in data_files:
+    if remove_file_if_empty(file):
+      continue
+      # Removed empty file
+    try:
+      # load data from each file
+      with open(file, 'r') as f:
+        data = json.load(f)
+    except:
+      '''
+               file is corrupt when scrapy is terminated while it is still crawling.
+               while corrupt, file is terminated with: `{some_data},`
+               adding : `""]` at the end of file to make it valid json file
 
-#       '''
-#       with open(file, 'a') as f:
-#         f.write(",{}]")
-#       with open(file, 'r') as f:
-#         data = json.load(f)
-#     nepali_paragraphs = []
-#     for d in data:
-#       if type(d) == dict:
-#         if 'paragraph' in d.keys():
-#           nepali_paragraphs.append(d)
-#           #   print(list(d.values()))
-#           #   # save dataset in a csv file
-#           #   with open(csv_file_name, 'a', newline='') as csv_file:
-#           #     # Create a CSV writer object
-#           #     csv_writer = csv.writer(csv_file)
-#           #     # Write the data to the CSV file
-#           #     csv_writer.writerows(list(d.values()))
-#           print(f'len_nepali_paragraphs:{len(nepali_paragraphs)} keys:{nepali_paragraphs[0].keys()}')
-#     # Open the CSV file in append mode
-#     with open(csv_file_name, 'a', newline='') as csv_file:
-#         # Create a CSV writer object
-#         csv_writer = csv.writer(csv_file)
+      '''
+      with open(file, 'a') as f:
+        f.write(",{}]")
+      with open(file, 'r') as f:
+        data = json.load(f)
+    nepali_paragraphs = []
+    for d in data:
+      if type(d) == dict:
+        if 'paragraph' in d.keys():
+          nepali_paragraphs.append(d)
+          #   print(list(d.values()))
+          #   # save dataset in a csv file
+          #   with open(csv_file_name, 'a', newline='') as csv_file:
+          #     # Create a CSV writer object
+          #     csv_writer = csv.writer(csv_file)
+          #     # Write the data to the CSV file
+          #     csv_writer.writerows(list(d.values()))
+          print(f'len_nepali_paragraphs:{len(nepali_paragraphs)} keys:{nepali_paragraphs[0].keys()}')
+    # Open the CSV file in append mode
+    with open(csv_file_name, 'a', newline='') as csv_file:
+        # Create a CSV writer object
+        csv_writer = csv.writer(csv_file)
 
-#         # Check if the CSV file is empty
-#         is_empty = os.path.getsize(csv_file_name) == 0
+        # Check if the CSV file is empty
+        is_empty = os.path.getsize(csv_file_name) == 0
         
-#         # Extract unique column names from dictionary keys
-#         column_names = set(key for d in nepali_paragraphs for key in d.keys())
+        # Extract unique column names from dictionary keys
+        column_names = set(key for d in nepali_paragraphs for key in d.keys())
         
-#         # Write the header only if the CSV file is empty
-#         if is_empty:
-#             csv_writer.writerow(column_names)
+        # Write the header only if the CSV file is empty
+        if is_empty:
+            csv_writer.writerow(column_names)
         
-#         # Iterate through each dictionary and write rows to CSV
-#         for d in nepali_paragraphs:
-#             # Create a list of values for the row, using empty string for missing keys
-#             row_values = [str(d.get(column, '')) for column in column_names]
-#             csv_writer.writerow(row_values)
-#     # ----------------------------
-#     # Drop duplicate rows in csv
-#     # ----------------------------
+        # Iterate through each dictionary and write rows to CSV
+        for d in nepali_paragraphs:
+            # Create a list of values for the row, using empty string for missing keys
+            row_values = [str(d.get(column, '')) for column in column_names]
+            csv_writer.writerow(row_values)
+    # ----------------------------
+    # Drop duplicate rows in csv
+    # ----------------------------
     
-#     # Read the CSV file into a DataFrame
-#     df = pd.read_csv(csv_file_name)
-#     # Drop duplicate rows
-#     df.drop_duplicates(inplace=True)
-#     # Write the cleaned DataFrame back to the CSV file
-#     df.to_csv(csv_file_name, index=False)
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(csv_file_name)
+    # Drop duplicate rows
+    df.drop_duplicates(inplace=True)
+    # Write the cleaned DataFrame back to the CSV file
+    df.to_csv(csv_file_name, index=False)
 
 def remove_file_if_empty(file_path):
   """Checks if a file is empty and removes it if it is.

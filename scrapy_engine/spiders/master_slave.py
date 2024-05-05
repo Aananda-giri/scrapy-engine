@@ -12,12 +12,15 @@ dotenv.load_dotenv()
 from scrapy import signals# , Spider
 from scrapy.linkextractors import LinkExtractor
 
-class EkantipurSpider(scrapy.Spider):
-    name = "ekantipur_v4"
+
+class MasterSlave(scrapy.Spider):
+    name = "master_slave"
     crawled_data = []
     to_visit = []
     other_data = []
     def publisher(self):
+            # unused function
+            # Initially I was thinking of using threads to upload to redis then again scrapy already have concurrent_processes so this function seemed un-necessary.
             # print(f'published: {self.crawled_data}')
             # while not self.stop_publisher.is_set() or self.crawled_data or self.to_visit:
             print(f'crawled:{len(self.crawled_data)} redis:{self.redis_client.llen(self.name)}')
@@ -34,7 +37,7 @@ class EkantipurSpider(scrapy.Spider):
             if self.to_visit:
                 pushed = 0
                 for _ in range(len(self.to_visit)):
-                    self.redis_client.lpush('to_visit_set', json.dumps(self.to_visit.pop()))
+                    self.redis_client.lpush('urls_to_crawl_cleaned_set', json.dumps(self.to_visit.pop()))
                     pushed += 1
                 print(f'---to_visit: {pushed}---')
             
@@ -61,15 +64,12 @@ class EkantipurSpider(scrapy.Spider):
         # self.publisher_thread.start()
         
         # self.start_urls = self.fetch_start_urls()
-        self.start_urls = [
-                "https://quotes.toscrape.com/page/1/",
-                # "https://quotes.toscrape.com/page/2/",
-            ]
+        self.start_urls = self.fetch_start_urls()
         # using bloom filter to store visited urls for faster lookup
         self.visited_urls = pybloom_live.ScalableBloomFilter(mode=pybloom_live.ScalableBloomFilter.LARGE_SET_GROWTH)    # pybloom_live.ScalableBloomFilter.SMALL_SET_GROWTH means
         
-    def fetch_start_urls(self):
-        return [json.loads(url) for url in self.redis_client.srandmember('to_visit_set', 15)]
+    def fetch_start_urls(self, number_of_new_urls_required=10):
+        return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
 
     def parse(self, response):
         links = LinkExtractor(deny_extensions=[]).extract_links(response)
@@ -91,8 +91,6 @@ class EkantipurSpider(scrapy.Spider):
                         'is_nepali_confidence': confidence
                     }
                 ))
-
-        
         # Saving drive links
         for link in links:
             is_drive_link, _ = is_google_drive_link(link.url)     #DriveFunctions.is_google_drive_link(link.url)
@@ -133,15 +131,23 @@ class EkantipurSpider(scrapy.Spider):
                     else:
                         site_links.append(link)
 
-        # To Redis Next Page to Follow: 
+        # Next Page to Follow: 
         for site_link in site_links:
-
             # print(f' \n muji site link: {site_link.url} \n')
             # base_url, crawl_it = should_we_crawl_it(site_link.url)  # self.visited_urls_base,
             if True or (is_same_domain(response.url, site_link.url) or is_np_domain) and site_link.url not in self.visited_urls:
                 # only follow urls from same domain or other nepali domain and not visited yet
-                # self.to_visit.append(site_link.url)
-                self.redis_client.sadd('to_visit_set', json.dumps(site_link.url))
+                if len(self.crawler.engine.slot.inprogress) >= self.crawler.engine.settings.get('CONCURRENT_REQUESTS'):
+                    # send new urls_to_crawl to redis.
+                    self.redis_client.sadd('url_to_crawl', json.dumps(site_link.url))
+                else:
+                    # yield url to crawl new urls_to_crawl by itself
+                    yield scrapy.Request(site_link.url, callback=self.parse)
+                    
+                    # self.to_visit.append(site_link.url)
+                    
+                    # Send crawling notice to server
+                    self.redis_client.sadd('url_crawling', json.dumps(site_link.url))
         
         # Remove visited url from to_visit set -> Now removed only  by back-end
         if 'redirect_urls' in response.request.meta:
@@ -149,24 +155,25 @@ class EkantipurSpider(scrapy.Spider):
         else:
             current_url = response.request.url
         self.visited_urls.add(response.url)
-        self.redis_client.srem('to_visit_set', json.dumps(current_url))
+        self.redis_client.srem('urls_to_crawl_cleaned_set', json.dumps(current_url))
 
+        # Keep the worker buisy by getting new urls to crawl
         # Get few more start urls to crawl next
-        fetched_start_urls = self.fetch_start_urls()
-        if fetched_start_urls:
-            for url in fetched_start_urls:
-                if url not in self.visited_urls:
-                    self.visited_urls.add(url)
-                    # print(url)
-                    yield scrapy.Request(url, callback=self.parse)
+        no_of_new_urls_required = self.crawler.engine.settings.get('CONCURRENT_REQUESTS') - len(self.crawler.engine.slot.inprogress)
+        if no_of_new_urls_required > 0:
+            fetched_start_urls = self.fetch_start_urls(number_of_new_urls_required)
+            if fetched_start_urls:
+                for url in fetched_start_urls:
+                    if url not in self.visited_urls:
+                        self.visited_urls.add(url)
+                        # print(url)
+                        yield scrapy.Request(url, callback=self.parse)
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(EkantipurSpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
         return spider
-    
-    def spider_closed(self, spider, reason):
-        print(f"almost sakyo muji. reason:{reason}")
+        
         # self.publisher()    # publish remaining data
         # Wait for both threads to finish
         # self.stop_publisher.set()
@@ -178,4 +185,3 @@ class EkantipurSpider(scrapy.Spider):
         # self.logger.info('Spider closed. Joining publisher threads.')
 
         # self.logger.info('Custom threads joined. Spider closing gracefully.')
-

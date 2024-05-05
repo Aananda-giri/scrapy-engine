@@ -1,7 +1,7 @@
 Flask==3.0.0
 langid==1.1.6
 pybloom-live==4.0.0
-pandas==1.5.3
+# pandas==1.5.3
 requests==2.31.0
 Scrapy==2.7.1
 Twisted==22.10.0
