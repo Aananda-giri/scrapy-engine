@@ -1,3 +1,4 @@
 .env
 scrapy_engine/spiders/sec_spider.py
 scrapy_engine/spiders/docs_spider.py
+scrapy_v2/.env
