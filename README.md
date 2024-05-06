@@ -16,7 +16,7 @@ REDIS_HOST='<redis-host>'
 ```
 
 ## Test run the scrapy-engine
-` scrapy crawl worker_spider_v2 -o worker_spider_v2.json`
+`scrapy crawl worker_spider_v2 -o worker_spider_v2.json`
 
 ### To run the server
 ```
