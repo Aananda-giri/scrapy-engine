@@ -124,8 +124,8 @@ def consumer():
             print(f'======consumed: {len(paragraphs)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
             # print(f'len(paragraphs): {len(paragraphs)} \n\n paragraphs:{paragraphs}')
         else:
-            print('========sleeping for 2 hours==========')   # No Data
-            time.sleep(2*60*60)  # sleep for a while before consuming more items
+            print('========sleeping for 1 minute==========')   # No Data
+            time.sleep(60)  # sleep for a while before consuming more items
 
 
 consumer_thread = threading.Thread(target=consumer)
