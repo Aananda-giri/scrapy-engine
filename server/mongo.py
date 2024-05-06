@@ -59,19 +59,18 @@ class Mongo():
         # crawling urls expire in every 2 hours
         return db_handler.get_items_before_timestamp(timestamp=time.time() - 7200, collection_name='url_crawling')
 
-    
     def fetch_start_urls(self, number_of_urls_required=15):
         # return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
         
-        # Get all entries with  status 'to_crawl'
-        urls = list(db_handler.db['urls-collection'].find({'status':'to_crawl'}).limit(c))
-
-        ## update status to crawling
-        for url in urls:
-            db_handler.db['urls-collection'].update_one({'_id':url['_id']}, {'$set': {'status':'crawling'}})
+        # get urls from to_crawl
+        urls = db_handler.get_n_items(collection_name='url_to_crawl', n=number_of_urls_required)
         
+        # append them to crawling   -> removes from to_crawl
+        for url in urls:
+            self.append_url_crawling(url)
+        
+        # return urls
         return urls
-
 
 
 if __name__=="__main__":
