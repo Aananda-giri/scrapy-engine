@@ -8,13 +8,13 @@ import os
 import redis
 import threading
 import time
-dotenv.load_dotenv()
+dotenv.load_dotenv("server/.env")
 from scrapy import signals# , Spider
 from scrapy.linkextractors import LinkExtractor
 
 
 class MasterSlave(scrapy.Spider):
-    name = "master_slave"
+    name = "worker_spider_v1"
     crawled_data = []
     to_visit = []
     other_data = []
@@ -135,7 +135,7 @@ class MasterSlave(scrapy.Spider):
         for site_link in site_links:
             # print(f' \n muji site link: {site_link.url} \n')
             # base_url, crawl_it = should_we_crawl_it(site_link.url)  # self.visited_urls_base,
-            if True or (is_same_domain(response.url, site_link.url) or is_np_domain) and site_link.url not in self.visited_urls:
+            if True or (is_same_domain(response.url, site_link.url) or is_np_domain(site_link.url)) and site_link.url not in self.visited_urls:
                 # only follow urls from same domain or other nepali domain and not visited yet
                 if len(self.crawler.engine.slot.inprogress) >= self.crawler.engine.settings.get('CONCURRENT_REQUESTS'):
                     # send new urls_to_crawl to redis.

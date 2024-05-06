@@ -1,5 +1,5 @@
 import scrapy
-
+# scrapy crawl quotes_spider -o quotes.json
 class QuotesSpider(scrapy.Spider):
     name = "quotes_spider"
     start_urls = [
@@ -16,6 +16,7 @@ class QuotesSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
+        import os;print('\n\n\n\n', os.listdir(), os.environ.get('some_key2'), '\n\n')
         # print(f"\n before {self.crawler.engine.slot.scheduler.stats._stats['scheduler/enqueued']} \n\n")
         print(f"\n before2 {len(self.crawler.engine.slot.inprogress)}")  # dont know why it always returns zero
         print(self.crawler.engine.settings.get('CONCURRENT_REQUESTS'))

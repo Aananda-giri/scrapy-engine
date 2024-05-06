@@ -1,76 +1,103 @@
-from .mongo_db_handler import MongoDBHandler
+import os
 import time
+from pymongo.server_api import ServerApi
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# Creating mangodb
+from pymongo import MongoClient
 
 class Mongo():
-    def __init__(self):
-        self.db_handler = MongoDBHandler(collection_name="scrapy-engine", db_name="scrapy-engine")
+    def __init__(self, db_name='scrapy-engine', collection_name="urls-collection"):
+        uri = f"mongodb+srv://{os.environ.get('mongo_username')}:{os.environ.get('mongo_password')}@scrapy-engine.cnaygdb.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
+        # uri = f"mongodb+srv://{os.environ.get('user_heroku')}:{os.environ.get('pass_heroku')}@cluster0.dgeujbs.mongodb.net/?retryWrites=true&w=majority"
+        
+        # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
+        client = MongoClient(uri, server_api=ServerApi('1'))
+        
+        # Create the database for our example (we will use the same database throughout the tutorial
+        self.db = client[db_name]
+        self.collection = self.db[collection_name]  # using single collection for all urls
+        
 
     def append_url_crawled(self, url):
-        # Add to url_crawled if it does not already exists 
-        
-        # no need to check if it already exists in url crawled because of unique index in url
-        # if not db_handler.exists(field='url', vlaue=url, collection_name='url_crawled'):
         try:
-            # Check if it does not already exists
-            db_handler.insert_one({'url':url, 'timestamp':time.time()}, collection_name='url_crawled')
+            # Try inserting url
+            self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'crawled'})
         except  Exception as ex:
-            pass
-        
-        # Remove from url_crawling
-        db_handler.delete_one(field='url', value=url, collection_name='url_crawling')        
-        
-        # Remove from url_to_crawl
-        db_handler.delete_one(field='url', value=url, collection_name='url_to_crawl')
+            # url exists: change status to 'crawled'
+            self.collection.update_one({'url':url}, {'$set': {'status':'crawled'}})
         
     def append_url_crawling(self, url):
-        # Add to url_crawling
-        if self.not_crawling_or_not_crawled():
-            # Check if url has not already been crawled
-            db_handler.insert_one({'url':url, 'timestamp':time.time()}, collection_name='url_crawling')
-            
-            # Remove from url_to_crawl
-            db_handler.delete_one(field='url', value=url, collection_name='url_to_crawl')
-            
-            return True
-        return False
-        
-
-    def append_url_to_crawl(self, url):
-        # Add to url_crawling
-        if self.not_to_crawl_or_not_crawling_or_not_crawled(url):
-            db_handler.insert_one({'url':url, 'timestamp':time.time()}, collection_name='url_to_crawl')
-            return True
-        return False
-    
-    def not_crawling_or_not_crawled(self, url):
-        if not db_handler.exists(field='url', vlaue=url, collection_name='url_crawled'):
-            if not db_handler.exists(field='url', vlaue=url, collection_name='url_crawling'):
+        try:
+            # Try inserting url
+            self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'crawling'})
+            return True # inserted
+        except  Exception as ex:
+            # modify to_crawl to crawling
+            result = self.collection.update_one(
+                {'url': url, 'status': {'$in': ['to_crawl']}},
+                {'$set': {'status':'crawling'}}, 
+            )
+            if result.modified_count > 0:
+                # print("url was in to_crawl and now changed to crawling")
                 return True
-        return False
+            else:
+                # print("it is either already crawling or crawled")
+                return False
     
-    def not_to_crawl_or_not_crawling_or_not_crawled(self, url):
-        if not db_handler.exists(field='url', vlaue=url, collection_name='url_crawled'):
-            if not db_handler.exists(field='url', vlaue=url, collection_name='url_crawling'):
-                if not db_handler.exists(field='url', vlaue=url, collection_name='url_to_crawl'):
-                    return True
-        return False
+    def append_url_to_crawl(self, url):
+        try:
+            # Try inserting url
+            self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'to_crawl'})
+            return True # inserted
+        except  Exception as ex:
+            return False    # url exists
 
-    def get_expired_url_crawling(self):
-        # crawling urls expire in every 2 hours
-        return db_handler.get_items_before_timestamp(timestamp=time.time() - 7200, collection_name='url_crawling')
+    def append_error_data(self, data):
+        # Delete url if it's status is either 'to_crawl' or crawling
+        # if status is crawled, try/except should avoid creating error url
+        results = list(self.collection.find({'url':data['url'], 'status': {'$in': ['to_crawl', 'crawling']}}))
+        if results:
+            self.collection.delete_one({'_id':results[0]['_id']})
 
-    def fetch_start_urls(self, number_of_urls_required=15):
+        try:
+            # Try inserting url
+            self.collection.insert_one(data)
+            return True # inserted
+        except  Exception as ex:
+            print(ex)
+            return   # error data exists
+
+    def recover_expired_crawling(self, created_before=7200):
+        def convert_from_crawling_to_to_crawl(urls):
+            for url in urls:
+                self.collection.update_one(
+                    {'_id':url['_id'], 'status': {'$in': ['crawling']}},
+                    {'$set': {'status':'to_crawl'}}
+                    )
+
+        # get items with status 'crawling' and before timestamp 2 hours (7200)
+        timestamp = time.time() - created_before  # 2 hours ago
+        expired_crawling_urls = list(self.collection.find({'status':'crawling', 'timestamp': {'$lt': timestamp}}))
+        convert_from_crawling_to_to_crawl(expired_crawling_urls)
+
+    
+    def fetch_start_urls(self, number_of_urls_required=10):
         # return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
         
-        # get urls from to_crawl
-        urls = db_handler.get_n_items(collection_name='url_to_crawl', n=number_of_urls_required)
-        
-        # append them to crawling   -> removes from to_crawl
+        # Get all entries with  status 'to_crawl'
+        urls = list(self.collection.find({'status':'to_crawl'}).limit(number_of_urls_required))
+
+        ## update status to crawling
         for url in urls:
-            self.append_url_crawling(url)
+            self.collection.update_one({'_id':url['_id']}, {'$set': {'status':'crawling'}})
         
-        # return urls
         return urls
+    def fetch_all(self):
+        return list(self.collection.find())
+
 
 
 if __name__=="__main__":

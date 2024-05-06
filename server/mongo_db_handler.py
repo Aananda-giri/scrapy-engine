@@ -63,6 +63,15 @@ class MongoDBHandler:
         result = collection.find({"timestamp": {"$lt": timestamp}})
         return list(result)
     
+    def get_n_items(self, n, collection_name=None):
+        if not collection_name:
+            collection = self.collection
+        else:
+            collection = self.db[collection_name]
+        
+        results = collection.find().limit(n)
+        return list(results)
+    
     def insert_many(self, data, collection_name=None):
         """Insert multiple documents into the collection."""
         if not collection_name:

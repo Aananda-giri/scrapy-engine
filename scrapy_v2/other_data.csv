@@ -1,4 +1,0 @@
-parent_url,url,text,link_type,link_description
-response.url,link.url,link.text,"<one of [""drive_link"", ""document"", ""social_media""]> ",
-response.url,link.url,link.text,"<one of [""drive_link"", ""document"", ""social_media""]> ",
-response.url,link.url,link.text,"<one of [""drive_link"", ""document"", ""social_media""]> ",

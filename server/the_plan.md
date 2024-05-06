@@ -1,17 +1,37 @@
-# Why use two databases (MongoDB + Redis)?
-* because mongodb has only 500MB storage (can't store crawled data). 
-* Redis is (smaller but) faster than MongoDb if we are to use it as temporary storage untill ec2 instance pops data from it.
-* why not api in central server?: concurrent read/write combined with multiple workers, would be easier to handle via redis, instead of free ec2 instance, where discord bot is running on the other side.
+[X] mongo to store error urls (urls with response 403)
+[X] scrapy remove bloom function: Scrapy have built in method (defined inside Scrapy.Request() with attribute dont_filter=False) to not visit visited url
 
-[ ] first step of def parse(): check mongo if url is already crawled or url_crawling
+# Mongo Single Collection
+- Now it does make sense to use single collection with unique index to url
+    ### Fields
+        - status: one of ['crawled', 'crawling', 'to_crawl']
+        - timestamp: time.time()
+        - url: <url>
+    ### Advantages:
+        - Dont have to delete data from 'crawling' or 'to_crawl' while appending to crawled, we just have to  change status to crawled.
+
+# Scrapy before yield Crawl Request
+[X] if self.mongo.append_url_crawling(site_link.url):
+        # yield url to crawl new urls_to_crawl by itself
+        yield scrapy.Request(site_link.url, callback=self.parse)
+
+[X] Check url not in url_crawled before starting crawling or before yielding it fro crawling
+
+# Why use two databases (MongoDB + Redis)?
+    * because mongodb has only 500MB storage (can't store crawled data). 
+    * Redis is (smaller but) faster than MongoDb if we are to use it as temporary storage untill ec2 instance pops data from it.
+    * why not api in central server?: concurrent read/write combined with multiple workers, would be easier to handle via redis, instead of free ec2 instance, where discord bot is running on the other side.
+
+[X] first step of def parse(): check mongo if url is already crawled or url_crawling
 
 [ ] * crawl headings along with paragraphs.
 
-* remove from (db.to_crawl or db.crawling) once (Crawled_data or other_date).parent_url is obtained
-* collect code and run using threading.
+[X] * remove from (db.to_crawl or db.crawling) once (Crawled_data or other_date).parent_url is obtained
+[ ] * collect code and run using threading.
+
 # MongoDb or Sqlite
     ## data_types:
-        * urls_crawled
+        * url_crawled
         * url_crawling
         * url_to_crawl
 
@@ -32,7 +52,7 @@
                     # db.sadd('url_to_crawl', json.dumps(url))    # add url in to_crawl
 
     * url_to_crawl
-[ ] * url_crawling: if in crawling for longer than 1 hour then put it into to_crawl
+[X] * url_crawling: if in crawling for longer than 2 hour then put it into to_crawl
         * get_urls_if_timeout(time=1hr)
     * urls_crawled: list or set
         * contains(url) -> True/False
@@ -41,10 +61,11 @@
 [ ] * log the errors
 [ ] * url_to_crawl, url_crawling, urls_to_crawl_cleaned_set->updated by server
 [ ] * use crawled_data to update urls_to_crawl_cleaned_set
-[ ] * remove is_nepali_confidence
+[X] * remove is_nepali_confidence
 
 # redis Data types
 * to_visit_set -> urls_to_crawl_cleaned_set   : set of urls sent by central server
+    * In v2 only seed urls are set by central server. After that they are managed using mongodb by worker.
 
 * self.redis_client.lpush('crawled_data', json.dumps(
                     {
@@ -124,7 +145,7 @@ send crawling and to_crawl
 
 
 ## Special cases:
-[ ] BBC.com : Only follow nepali
+[X] BBC.com : Only follow /nepali
 
 ## Potential problems
 * central server failure

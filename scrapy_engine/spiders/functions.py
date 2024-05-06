@@ -380,6 +380,10 @@ def is_np_domain(url):
 
   return base_url.endswith('.np') or base_url.endswith('.np/')
 
+def is_special_domain_to_crawl(url):
+    # crawl some non '.np' domains
+    return url.startswith("https://www.bbc.com/nepali/")
+
 
 def should_we_crawl_it(new_url, visited_urls_base=None):
   # return true if it is one of first 1000 .np domain
