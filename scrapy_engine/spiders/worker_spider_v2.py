@@ -117,7 +117,8 @@ class MasterSlave(scrapy.Spider):
         for site_link in site_links:
             # print(f' \n muji site link: {site_link.url} \n')
             # base_url, crawl_it = should_we_crawl_it(site_link.url)  # self.visited_urls_base,
-            if (is_same_domain(response.url, site_link.url) or is_np_domain(site_link.url) or is_special_domain_to_crawl(site_link.url)): # and site_link.url not in self.visited_urls:
+            if (is_np_domain(site_link.url) or is_special_domain_to_crawl(site_link.url)): # and site_link.url not in self.visited_urls:
+                # is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
                 # only follow urls from same domain or other nepali domain and not visited yet
                 if len(self.crawler.engine.slot.inprogress) >= self.crawler.engine.settings.get('CONCURRENT_REQUESTS'):
                     # send new urls_to_crawl to redis.
