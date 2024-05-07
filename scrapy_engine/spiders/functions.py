@@ -1,11 +1,29 @@
 import langid
 import re
-import os, json, csv
+import os, sys, json, csv
 # import pandas as pd
 
 import pybloom_live
 from pathlib import Path
 from urllib.parse import urlparse
+
+def load_env_var_in_google_colab():
+    # Assuming environment variables are set in google colab Secrets
+
+    if 'google.colab' in sys.modules:
+        # Code is running in google colab
+        try:
+            from google.colab import userdata
+            environ_variables = ["REDIS_HOST", "REDIS_PASSWORD", "REDIS_PORT", "mongo_password", "mongo_username"]
+            for env_var in environ_variables:
+                try:
+                    os.environ[env_var] = userdata.get(env_var)
+                except Exception as Ex:
+                  print(Ex)
+                  # break
+            os.environ.get("mongo_password")
+        except Exception as Ex:
+                  print(Ex)
 
 def merge_crawled_json_files():
   '''
