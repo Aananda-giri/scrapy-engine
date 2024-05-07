@@ -1,4 +1,10 @@
-# Simple Scrapy scripts to crawl online nepali news sites
+# Distributed Scrapy script to crawl online nepali news sites
+### workflow (img)
+![workflow](server/workflow.png)
+
+* Worker: Distributed Scrapy Script that performs the actual crawling
+* Server: Central Scrpit that collects the crawled data
+
 
 ### Save mongo-db api key and redis api key in file: server/.env
 format:
@@ -26,10 +32,6 @@ python3 server.py
 * Redis: to get crawled data
 * MongoDb: to store urls working with
 * generates two .csv files: crawled_data.csv, other_data.csv
-
-
-### workflow (img)
-![workflow](server/workflow.png)
 
 ## Re-initialize Database
 * note:It will delete everything in MongoDb, Redis and .csv files
