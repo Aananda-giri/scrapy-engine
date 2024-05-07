@@ -1,4 +1,4 @@
-from .functions import is_social_media_link, is_nepali_language, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, get_resume_urls
+from .functions import is_social_media_link, is_nepali_language, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, get_resume_urls, load_env_var_in_google_colab
 import scrapy
 # import pybloom_live
 import scrapy
@@ -8,13 +8,17 @@ import os
 import redis
 import threading
 import time
-dotenv.load_dotenv("server/.env")
+
 from scrapy import signals# , Spider
 from scrapy.linkextractors import LinkExtractor
 from server.mongo import Mongo
 
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError
+
+# load environment variables if running in google colab
+load_env_var_in_google_colab()
+dotenv.load_dotenv("server/.env")
 
 class MasterSlave(scrapy.Spider):
     name = "worker_spider_v2"
