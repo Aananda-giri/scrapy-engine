@@ -50,6 +50,11 @@ class MasterSlave(scrapy.Spider):
     # def fetch_start_urls(self, number_of_new_urls_required=10):
     #     return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
     def start_requests(self):
+        # pasting this code from __init__ because this function is being called before __init__ I guess.
+        # load environment variables if running in google colab
+        load_env_var_in_google_colab()
+        dotenv.load_dotenv("server/.env")
+
         start_urls = [data_item['url'] for data_item in self.mongo.fetch_start_urls()]
         print(f'\n\n start:{start_urls} \n\n')
         for url in start_urls:
