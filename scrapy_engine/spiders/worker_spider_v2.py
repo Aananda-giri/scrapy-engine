@@ -1,4 +1,4 @@
-from .functions import is_social_media_link, is_nepali_language, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, get_resume_urls, load_env_var_in_google_colab
+from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab  # is_nepali_language
 import scrapy
 # import pybloom_live
 import scrapy
@@ -16,9 +16,6 @@ from server.mongo import Mongo
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError
 
-# load environment variables if running in google colab
-load_env_var_in_google_colab()
-dotenv.load_dotenv("server/.env")
 
 class MasterSlave(scrapy.Spider):
     name = "worker_spider_v2"
@@ -28,6 +25,10 @@ class MasterSlave(scrapy.Spider):
     
             
     def __init__(self, *args, **kwargs):
+        # load environment variables if running in google colab
+        load_env_var_in_google_colab()
+        dotenv.load_dotenv("server/.env")
+
         # super(EkantipurSpider, self).__init__(*args, **kwargs)
         self.mongo = Mongo()
         
@@ -61,8 +62,8 @@ class MasterSlave(scrapy.Spider):
         # yield every paragraph from current page
         paragraphs = response.css('p::text').getall()
         for paragraph in paragraphs:
-            is_nepali, confidence = is_nepali_language(paragraph)
-            if is_nepali:
+            # is_nepali, confidence = is_nepali_language(paragraph)
+            if True or is_nepali:   # implement a way to detect nepali language (langid is not reliable)
                 # Save crawled data to redis
                 # self.crawled_data.append(
                 self.redis_client.lpush('crawled_data', json.dumps(
@@ -134,16 +135,11 @@ class MasterSlave(scrapy.Spider):
                         # Send crawling notice to server
                         # self.redis_client.sadd('url_crawling', json.dumps(site_link.url))
         
-        # Remove visited url from to_visit set -> Now removed only  by back-end
-        if 'redirect_urls' in response.request.meta:
-            current_url = response.request.meta['redirect_urls'][0]
-        else:
-            current_url = response.request.url
-        
-        # self.visited_urls.add(response.url)
-        self.mongo.append_url_crawled(current_url)
-
-        # self.redis_client.srem('urls_to_crawl_cleaned_set', json.dumps(current_url))
+        self.mongo.append_url_crawled(response.request.url)
+        ''' Note:
+            If a url redirects to another url, then the original url is added to visited urls so as to not to visit it again.
+            redirected url is sent via crawled_data and other_data then update visited_url.
+        '''
 
         # Keep the worker buisy by getting new urls to crawl
         # Get few more start urls to crawl next

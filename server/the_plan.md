@@ -1,3 +1,5 @@
+[X] is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
+    * remove all bbc.com urls not containing bbc.com/nepali
 [X] mongo to store error urls (urls with response 403)
 [X] scrapy remove bloom function: Scrapy have built in method (defined inside Scrapy.Request() with attribute dont_filter=False) to not visit visited url
 
@@ -59,8 +61,8 @@
         * Append(url)   -> add url
 
 [ ] * log the errors
-[ ] * url_to_crawl, url_crawling, urls_to_crawl_cleaned_set->updated by server
-[ ] * use crawled_data to update urls_to_crawl_cleaned_set
+[X] * url_to_crawl, url_crawling, urls_to_crawl_cleaned_set->updated by server
+[ ] * use crawled_data to update urls_to_crawl_cleaned_set i.e. make it 'url_crawled' in mongo.
 [X] * remove is_nepali_confidence
 
 # redis Data types

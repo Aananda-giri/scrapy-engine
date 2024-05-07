@@ -3,7 +3,7 @@ import re
 import os, sys, json, csv
 # import pandas as pd
 
-import pybloom_live
+# import pybloom_live
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -245,89 +245,89 @@ def remove_file_if_empty(file_path):
     return False
 
 
-def get_resume_urls(domain_name_to_resume_from):
-  '''
-    -------------
-     pseudocode:
-    -------------
+# def get_resume_urls(domain_name_to_resume_from):
+#   '''
+#     -------------
+#      pseudocode:
+#     -------------
 
-    domain_name_to_resume_from = ekantipur
+#     domain_name_to_resume_from = ekantipur
 
-    while there is file ['ekantipur.json', 'ekantipur_0.json', 'ekantipur_1.json', ...]:
-        urls_to_visit.add(to_visited_urls)
-        urls_visited.add(visited_urls)
+#     while there is file ['ekantipur.json', 'ekantipur_0.json', 'ekantipur_1.json', ...]:
+#         urls_to_visit.add(to_visited_urls)
+#         urls_visited.add(visited_urls)
 
-    fro url in urls_to_visit:
-        add url to news_urls if url is not present in urls_visited
+#     fro url in urls_to_visit:
+#         add url to news_urls if url is not present in urls_visited
 
-    return list(news_urls)
-    '''
+#     return list(news_urls)
+#     '''
 
-  new_file_name = domain_name_to_resume_from + '.json'
-  remove_file_if_empty(new_file_name)
+#   new_file_name = domain_name_to_resume_from + '.json'
+#   remove_file_if_empty(new_file_name)
 
-  urls_to_visit = set()
-  urls_visited = pybloom_live.ScalableBloomFilter(
-      mode=pybloom_live.ScalableBloomFilter.LARGE_SET_GROWTH)
-  news_start_ulrs = set()
-  index = 0
+#   urls_to_visit = set()
+#   urls_visited = pybloom_live.ScalableBloomFilter(
+#       mode=pybloom_live.ScalableBloomFilter.LARGE_SET_GROWTH)
+#   news_start_ulrs = set()
+#   index = 0
   
-  # load data from  merged file
-  if os.path.exists(domain_name_to_resume_from + '_merged_.json'): 
-    if not remove_file_if_empty(new_file_name):
-        # File not empty
-        with open(domain_name_to_resume_from + '_merged_.json','r') as f:
-            data = json.load(f)
-        if data:
-            for each_data in data:
-                if type(each_data) == dict and 'to_visit' in each_data.keys():
-                    urls_to_visit.add(
-                        each_data['to_visit'])  # each_data['to_visit'] is a of urls
-                if type(each_data) == dict:
-                    if 'visited' in each_data.keys():
-                        urls_visited.add(
-                            each_data['visited'])  # each_data['visited'] is a url
+#   # load data from  merged file
+#   if os.path.exists(domain_name_to_resume_from + '_merged_.json'): 
+#     if not remove_file_if_empty(new_file_name):
+#         # File not empty
+#         with open(domain_name_to_resume_from + '_merged_.json','r') as f:
+#             data = json.load(f)
+#         if data:
+#             for each_data in data:
+#                 if type(each_data) == dict and 'to_visit' in each_data.keys():
+#                     urls_to_visit.add(
+#                         each_data['to_visit'])  # each_data['to_visit'] is a of urls
+#                 if type(each_data) == dict:
+#                     if 'visited' in each_data.keys():
+#                         urls_visited.add(
+#                             each_data['visited'])  # each_data['visited'] is a url
 
-  while os.path.exists(new_file_name):
-    if remove_file_if_empty(new_file_name):
-      break
-    try:
-      with open(new_file_name, 'r') as file:
-        data = json.load(file)
-    except:
-      '''
-               file is corrupt when scrapy is terminated while it is still crawling.
-               while corrupt, file is terminated with: `{some_data},`
-               adding : `""]` at the end of file to make it valid json file
+#   while os.path.exists(new_file_name):
+#     if remove_file_if_empty(new_file_name):
+#       break
+#     try:
+#       with open(new_file_name, 'r') as file:
+#         data = json.load(file)
+#     except:
+#       '''
+#                file is corrupt when scrapy is terminated while it is still crawling.
+#                while corrupt, file is terminated with: `{some_data},`
+#                adding : `""]` at the end of file to make it valid json file
 
-            '''
-      with open(new_file_name, 'a') as file:
-        file.write("\"\"]")
+#             '''
+#       with open(new_file_name, 'a') as file:
+#         file.write("\"\"]")
 
-      with open(new_file_name, 'r') as file:
-        data = json.load(file)
-    for each_data in data:
-      if type(each_data) == dict and 'to_visit' in each_data.keys():
-        urls_to_visit.add(
-            each_data['to_visit'])  # each_data['to_visit'] is a of urls
+#       with open(new_file_name, 'r') as file:
+#         data = json.load(file)
+#     for each_data in data:
+#       if type(each_data) == dict and 'to_visit' in each_data.keys():
+#         urls_to_visit.add(
+#             each_data['to_visit'])  # each_data['to_visit'] is a of urls
 
-      if type(each_data) == dict:
-        if 'visited' in each_data.keys():
-          urls_visited.add(
-              each_data['visited'])  # each_data['visited'] is a url
+#       if type(each_data) == dict:
+#         if 'visited' in each_data.keys():
+#           urls_visited.add(
+#               each_data['visited'])  # each_data['visited'] is a url
 
-    new_file_name = domain_name_to_resume_from + f'_{index}.json'
-    # remove file if file is empty
-    remove_file_if_empty(new_file_name)
+#     new_file_name = domain_name_to_resume_from + f'_{index}.json'
+#     # remove file if file is empty
+#     remove_file_if_empty(new_file_name)
 
-    index += 1
+#     index += 1
 
-  print(f'\n\n new_file_name from function:{new_file_name}')
-  for to_visit in urls_to_visit:
-    if to_visit not in urls_visited:
-      news_start_ulrs.add(to_visit)
+#   print(f'\n\n new_file_name from function:{new_file_name}')
+#   for to_visit in urls_to_visit:
+#     if to_visit not in urls_visited:
+#       news_start_ulrs.add(to_visit)
 
-  return list(news_start_ulrs), urls_visited
+#   return list(news_start_ulrs), urls_visited
 
 
 def is_nepali_language(text):
