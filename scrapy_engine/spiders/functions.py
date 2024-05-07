@@ -1,4 +1,4 @@
-import langid
+# import langid
 import re
 import os, sys, json, csv
 # import pandas as pd
@@ -330,10 +330,10 @@ def remove_file_if_empty(file_path):
 #   return list(news_start_ulrs), urls_visited
 
 
-def is_nepali_language(text):
-  lang, confidence = langid.classify(text)
-  return lang == 'hi', confidence
-  # is_nepali("बल्ल बुझायो एनसेलले खरिद-बिक्री विवरण")
+# def is_nepali_language(text):
+#   lang, confidence = langid.classify(text)
+#   return lang == 'hi', confidence
+#   # is_nepali("बल्ल बुझायो एनसेलले खरिद-बिक्री विवरण")
 
 
 def is_google_drive_link(link):
