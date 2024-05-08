@@ -191,7 +191,7 @@ class MasterSlave(scrapy.Spider):
             self.logger.error('DNSLookupError on %s', request.url)
             
             # Save error data on mongodb
-            error_data = {'url':response.url, 'timestamp':time.time(), 'status':'error', 'status_code':response.status, 'error_type':'DNSLookupError'}
+            error_data = {'url':request.url, 'timestamp':time.time(), 'status':'error', 'error_type':'DNSLookupError'}
             self.mongo.append_error_data(error_data)
             # print(f'\n\n\n\n{error_data}\n\n\n\n\n\n')
 
@@ -200,6 +200,6 @@ class MasterSlave(scrapy.Spider):
             self.logger.error('TimeoutError on %s', request.url)
 
             # Save error data on mongodb
-            error_data = {'url':response.url, 'timestamp':time.time(), 'status':'error', 'status_code':response.status, 'error_type':'TimeoutError'}
+            error_data = {'url':request.url, 'timestamp':time.time(), 'status':'error', 'error_type':'TimeoutError'}
             self.mongo.append_error_data(error_data)
             # print(f'\n\n\n\n{error_data}\n\n\n\n\n\n')
