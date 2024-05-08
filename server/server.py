@@ -56,13 +56,6 @@ thread.start()
 # Save data from redis to csv file
 # ======================================================
 
-# Connect to your Redis server
-redis_client = redis.Redis(
-    host=os.environ.get('REDIS_HOST', 'localhost'),
-    port = int(os.environ.get('REDIS_PORT', 6379)),
-    password=os.environ.get('REDIS_PASSWORD', None),
-)
-
 def pop_from_mongo():
     crawled_data = list(mongo.db['crawled_data'].find())
     other_data = list(mongo.db['other_data'].find())
@@ -81,6 +74,15 @@ def pop_from_mongo():
     print(f'======consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
 
+'''
+# Connect to your Redis server
+redis_client = redis.Redis(
+    host=os.environ.get('REDIS_HOST', 'localhost'),
+    port = int(os.environ.get('REDIS_PORT', 6379)),
+    password=os.environ.get('REDIS_PASSWORD', None),
+)
+
+
 def pop_from_redis():
     # print('call gari rako muji')
     lists_to_pop = ['crawled_data', 'other_data']       # , 'crawled', 'to_crawl']
@@ -95,9 +97,10 @@ def pop_from_redis():
             # print(f'list_name:{list_name}')
             popped_data[list_name].append(json.loads(redis_client.rpop(list_name)))
     # print("return vayo muji")
-    return popped_data
+     return popped_data
+'''
 
-    '''
+'''
     e.g. format
     {
         'crawled_data': {
@@ -107,7 +110,24 @@ def pop_from_redis():
             
         }
     }
-    '''
+
+def consumer():
+    print('consumer')
+    pulled = 0
+    while True:
+        print(f'{time.time()}: ', end='')
+        # Old code using Redis
+        paragraphs = pop_from_redis()
+        if paragraphs:
+            save_to_csv(paragraphs)
+            pulled += len(paragraphs)
+            print(f'======consumed: {len(paragraphs)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
+            # print(f'len(paragraphs): {len(paragraphs)} \n\n paragraphs:{paragraphs}')
+        else:
+            print('========sleeping for 5 sec.==========')   # No Data
+            time.sleep(5)  # sleep for a while before consuming more items
+
+'''
 
 
 def save_to_csv(data, data_type="crawled_data"):

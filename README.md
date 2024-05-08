@@ -57,10 +57,6 @@ python3 server.py
   # Create index for unique url
   db.collection.create_index('url', unique=True)
 
-  # Create index for unique url
-  crawled_data_collection.create_index('parent_url', unique=True)
-  other_data_collection.create_index('parent_url', unique=True)
-
   # Populate initial Start Urls
   import time
   from mongo_db_handler import MongoDBHandler
