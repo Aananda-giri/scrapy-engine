@@ -6,6 +6,7 @@ import redis
 import threading
 from mongo import Mongo
 
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -140,7 +141,7 @@ consumer_thread.start()
 # producer_thread.join()
 # publisher_thread.join()
 consumer_thread.join()
-
+thread.join()  # Wait for the thread to finish
 
 
 
