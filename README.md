@@ -46,9 +46,20 @@ python3 server.py
 
   ## Delete all (does-not require re-indexing)
   db.collection.delete_many({})
-
+  crawled_data = list(db.db['crawled_data'].find())
+  other_data = list(db.db['other_data'].find())
+  combined_data = {"crawled_data":crawled_data, "other_data":other_data}
+  
+  # Delete multiple data by id
+  db.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
+  db.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+  
   # Create index for unique url
   db.collection.create_index('url', unique=True)
+
+  # Create index for unique url
+  crawled_data_collection.create_index('parent_url', unique=True)
+  other_data_collection.create_index('parent_url', unique=True)
 
   # Populate initial Start Urls
   import time

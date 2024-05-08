@@ -32,12 +32,12 @@ except Exception as ex:
 # Crawling  ==> to_crawl (if timestamp >2 hours)
 # ======================================================
 
-db = Mongo()
+mongo = Mongo()
 
 def run_periodically():
   while True:
     # Convert urls from crawling to to_crawl if they are in crawling state for more than 2 hours
-    db.recover_expired_crawling(created_before=7200)
+    mongo.recover_expired_crawling(created_before=7200)
     
     
     # Sleep for 3 hour (converted to seconds)
@@ -62,6 +62,24 @@ redis_client = redis.Redis(
     port = int(os.environ.get('REDIS_PORT', 6379)),
     password=os.environ.get('REDIS_PASSWORD', None),
 )
+
+def pop_from_mongo():
+    crawled_data = list(mongo.db['crawled_data'].find())
+    other_data = list(mongo.db['other_data'].find())
+    if not crawled_data and not other_data:
+        # there is no data
+        print('========sleeping for 5 sec.==========')   # No Data
+        time.sleep(5)
+    combined_data = {"crawled_data":crawled_data, "other_data":other_data}
+    
+    # Save to .csv file
+    save_to_csv(combined_data)
+
+    # Delete multiple data by id
+    mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
+    mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+    print(f'======consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
+
 
 def pop_from_redis():
     # print('call gari rako muji')
@@ -116,9 +134,12 @@ def consumer():
     print('consumer')
     pulled = 0
     while True:
-        # print('consumer')
+        print(f'{time.time()}: ', end='')
+        pop_from_mongo()
+
+        '''
+        # Old code using Redis
         paragraphs = pop_from_redis()
-        
         if paragraphs:
             save_to_csv(paragraphs)
             pulled += len(paragraphs)
@@ -127,6 +148,7 @@ def consumer():
         else:
             print('========sleeping for 5 sec.==========')   # No Data
             time.sleep(5)  # sleep for a while before consuming more items
+        '''
 
 
 consumer_thread = threading.Thread(target=consumer)

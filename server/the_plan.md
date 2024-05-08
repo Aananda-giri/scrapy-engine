@@ -1,5 +1,6 @@
 [X] is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
     * remove all bbc.com urls not containing bbc.com/nepali
+[ ] * remove all bbc.com data from crawled_data for url not starting with bbc.com/nepali (it is news in english downloaded due to an error)
 [X] mongo to store error urls (urls with response 403)
 [X] scrapy remove bloom function: Scrapy have built in method (defined inside Scrapy.Request() with attribute dont_filter=False) to not visit visited url
 

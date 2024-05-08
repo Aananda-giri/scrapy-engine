@@ -50,10 +50,6 @@ class MasterSlave(scrapy.Spider):
     # def fetch_start_urls(self, number_of_new_urls_required=10):
     #     return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
     def start_requests(self):
-        # pasting this code from __init__ because this function is being called before __init__ I guess.
-        # load environment variables if running in google colab
-        load_env_var_in_google_colab()
-        dotenv.load_dotenv("server/.env")
 
         start_urls = [data_item['url'] for data_item in self.mongo.fetch_start_urls()]
         print(f'\n\n start:{start_urls} \n\n')
@@ -71,51 +67,67 @@ class MasterSlave(scrapy.Spider):
             if True or is_nepali:   # implement a way to detect nepali language (langid is not reliable)
                 # Save crawled data to redis
                 # self.crawled_data.append(
-                self.redis_client.lpush('crawled_data', json.dumps(
-                    {
+                the_crawled_data ={
                         'parent_url': response.url,
                         'page_title': response.css('title::text').get(),
                         'paragraph': paragraph,
                         # 'is_nepali_confidence': confidence
                     }
-                ))
+                self.mongo.db['crawled_data'].insert_one(the_crawled_data)
+                '''
+                # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                self.redis_client.lpush('crawled_data', json.dumps(the_crawled_data))
+                '''
         # Saving drive links
         for link in links:
             is_drive_link, _ = is_google_drive_link(link.url)     #DriveFunctions.is_google_drive_link(link.url)
             if is_drive_link:
-                # self.other_data.append({
-                self.redis_client.lpush('other_data', json.dumps(
-                    {
+                the_other_data = {
                         'parent_url': response.url,
                         'url': link.url,
                         'text': link.text,
                         'link_type': "drive_link",
                         'link_description': None
-                    }
-                ))
+                }
+                self.mongo.db['other_data'].insert_one(the_other_data)
+                '''
+                # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                # # self.other_data.append({
+                self.redis_client.lpush('other_data', json.dumps(the_other_data))
+                '''
             else:
                 is_document, document_type, ignore_doc = is_document_link(link.url)
                 if is_document:
                     if not ignore_doc:  # and doc_type != 'image'
-                        # self.other_data.append({
-                        self.redis_client.lpush('other_data', json.dumps({
+                        the_other_data = {
                             'parent_url': response.url,
                             'url': link.url,
                             'text': link.text,
                             'link_type': "document",
                             'link_description': document_type
-                        }))
+                        }
+                        self.mongo.db['other_data'].insert_one(the_other_data)
+
+                        '''
+                        # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                        # self.other_data.append({
+                        self.redis_client.lpush('other_data', json.dumps(the_other_data))
+                        '''
                 else:
                     is_social_media, social_media_type = is_social_media_link(link.url)
                     if is_social_media:
-                        # self.other_data.append({
-                        self.redis_client.lpush('other_data', json.dumps({
+                        the_other_data = {
                             'parent_url': response.url,
                             'url': link.url,
                             'text': link.text,
                             'link_type': "social_media",
                             'link_description': social_media_type
-                        }))
+                        }
+                        self.mongo.db['other_data'].insert_one(the_other_data)
+                        '''
+                        # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                        self.redis_client.lpush('other_data', json.dumps())
+                        '''
                     else:
                         site_links.append(link)
 
