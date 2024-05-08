@@ -120,9 +120,9 @@ def consumer():
         paragraphs = pop_from_redis()
         if paragraphs:
             save_to_csv(paragraphs)
-            pulled += len(paragraphs)
+            pulled += sum([len(paragraphs[key]) for key in paragraphs.keys()])
             print(f'======consumed: {len(paragraphs)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
-            # print(f'len(paragraphs): {len(paragraphs)} \n\n paragraphs:{paragraphs}')
+            # print(f'len(paragraphs): {sum([len(paragraphs[key]) for key in paragraphs.keys()])} \n\n paragraphs:{paragraphs}')
         else:
             print('========sleeping for 5 sec.==========')   # No Data
             time.sleep(5)  # sleep for a while before consuming more items

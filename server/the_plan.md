@@ -1,3 +1,4 @@
+[ ] http://csgrants.gov.np/Home/ViewNoticeNew : AttributeError: Response content isn't text
 [X] is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
     * remove all bbc.com urls not containing bbc.com/nepali
 [ ] * remove all bbc.com data from crawled_data for url not starting with bbc.com/nepali (it is news in english downloaded due to an error)
