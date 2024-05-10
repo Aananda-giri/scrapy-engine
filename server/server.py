@@ -3,6 +3,7 @@ import time
 import csv
 import json
 import redis
+import shutil
 import threading
 from mongo import Mongo
 
@@ -73,6 +74,39 @@ def pop_from_mongo():
     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
     print(f'======consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
+def backup_crawled_data():
+    # ---------------------------------------------------------------------------
+    ### Backup file named crawled_data.csv & other_data.csv after every 12 hours
+    # ---------------------------------------------------------------------------
+    while True:
+        if 'crawled_data.csv' in os.listdir():
+            # get latest backup index
+            backup_indices = [int(file.split('_')[-1].split('.')[0]) for file in os.listdir() if file.startswith('crawled_data_')]
+            print(backup_indices)
+            if backup_indices:
+                # Get maximum index
+                max_index = max(backup_indices)
+            else:
+                max_index = 0
+
+        try:
+            # backup 'crawled_data.csv' with index max_index+1
+            shutil.copy('crawled_data.csv', f'crawled_data_backup_{max_index+1}.csv')
+        except Exception as ex:
+            print(ex)
+            # log the error
+            logging.exception(ex)
+
+        try:
+            # backup 'other_data.csv' with index max_index+1
+            shutil.copy('other_data.csv', f'other_data_backup_{max_index+1}.csv')
+        except Exception as ex:
+            print(ex)
+            # log the error
+            logging.exception(ex)
+        
+        # Backup once for every 12 hours
+        time.sleep(12 * 60 * 60)  # Sleep for 12 hours
 
 '''
 # Connect to your Redis server
@@ -157,6 +191,10 @@ def consumer():
         print(f'{time.time()}: ', end='')
         pop_from_mongo()
 
+
+        
+            
+
         '''
         # Old code using Redis
         paragraphs = pop_from_redis()
@@ -172,6 +210,10 @@ def consumer():
 
 
 consumer_thread = threading.Thread(target=consumer)
+backup_thread = threading.Thread(target=backup_crawled_data)
+
+backup_thread.start()
+backup_thread.daemon = True
 consumer_thread.daemon = True   # daemon threads are forcefully shut down when Python exits and programme waits for non-daemon threads to finish their tasks.
 
 # Start the thread
@@ -182,7 +224,7 @@ consumer_thread.start()
 # Wait for both threads to finish
 # producer_thread.join()
 # publisher_thread.join()
-consumer_thread.join()
+# consumer_thread.join()    # waits for consumer_thread to finigh
 thread.join()  # Wait for the thread to finish
 
 
