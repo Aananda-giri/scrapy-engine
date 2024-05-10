@@ -79,6 +79,10 @@ def backup_crawled_data():
     ### Backup file named crawled_data.csv & other_data.csv after every 12 hours
     # ---------------------------------------------------------------------------
     while True:
+        # Backup once for every 12 hours
+        time.sleep(12 * 60 * 60)  # Sleep for 12 hours
+
+        # Check if 'crawled_data.csv' exists
         if 'crawled_data.csv' in os.listdir():
             # get latest backup index
             backup_indices = [int(file.split('_')[-1].split('.')[0]) for file in os.listdir() if file.startswith('crawled_data_')]
@@ -104,9 +108,6 @@ def backup_crawled_data():
             print(ex)
             # log the error
             logging.exception(ex)
-        
-        # Backup once for every 12 hours
-        time.sleep(12 * 60 * 60)  # Sleep for 12 hours
 
 '''
 # Connect to your Redis server
