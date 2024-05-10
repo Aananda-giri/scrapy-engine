@@ -84,7 +84,7 @@ class Mongo():
         convert_from_crawling_to_to_crawl(expired_crawling_urls)
 
     
-    def fetch_start_urls(self, number_of_urls_required=10):
+    def fetch_start_urls(self, number_of_urls_required=50):
         # return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
         
         # Get all entries with  status 'to_crawl'
