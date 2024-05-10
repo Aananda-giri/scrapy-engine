@@ -212,8 +212,9 @@ def consumer():
 consumer_thread = threading.Thread(target=consumer)
 backup_thread = threading.Thread(target=backup_crawled_data)
 
-backup_thread.start()
 backup_thread.daemon = True
+backup_thread.start()
+
 consumer_thread.daemon = True   # daemon threads are forcefully shut down when Python exits and programme waits for non-daemon threads to finish their tasks.
 
 # Start the thread
