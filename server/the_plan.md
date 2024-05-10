@@ -1,4 +1,13 @@
-[ ] http://csgrants.gov.np/Home/ViewNoticeNew : AttributeError: Response content isn't text
+[ ] Get to_crawl_urls in batches like batch of 50
+[ ] Avoid Checking if url is crawled
+[ ] save all newly crawled urls to mongo
+    async for url  in newly crawled:
+        save_to_mongo(url)
+[ ] logger.log(time.time(): converted n urls from crawling to crawled)
+
+
+
+[ ] http://csgrants.gov.np/Home/ViewNoticeNew :scrapy_v2_line_59: AttributeError: Response content isn't text
 [X] is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
     * remove all bbc.com urls not containing bbc.com/nepali
 [ ] * remove all bbc.com data from crawled_data for url not starting with bbc.com/nepali (it is news in english downloaded due to an error)
