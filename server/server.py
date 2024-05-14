@@ -174,7 +174,7 @@ def save_to_csv(data, data_type="crawled_data"):
             # field_names = ['paragraph', 'parent_url', 'page_title', 'is_nepali_confidence']
             field_names = data_items[0].keys()
             file_exists = os.path.exists(csv_file_path)
-            print(f'file_exists: {file_exists}')
+            # print(f'file_exists: {file_exists}')
             # Open the CSV file in append mode
             with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
                 # Create a CSV writer object
