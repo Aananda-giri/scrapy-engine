@@ -60,9 +60,10 @@ thread.start()
 def pop_from_mongo():
     crawled_data = list(mongo.db['crawled_data'].find())
     other_data = list(mongo.db['other_data'].find())
+    print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
     if not crawled_data and not other_data:
         # there is no data
-        print('========sleeping for 5 sec.==========')   # No Data
+        print('========sleeping for 5 sec.....==========')   # No Data
         time.sleep(5)
     combined_data = {"crawled_data":crawled_data, "other_data":other_data}
     
@@ -72,7 +73,8 @@ def pop_from_mongo():
     # Delete multiple data by id
     mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-    print(f'======consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
+    logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
+    print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
 def backup_crawled_data():
     # ---------------------------------------------------------------------------
@@ -189,7 +191,8 @@ def consumer():
     print('consumer')
     pulled = 0
     while True:
-        print(f'{time.time()}: ', end='')
+        # well formatted date time
+        # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
         pop_from_mongo()
 
 
