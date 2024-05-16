@@ -1,4 +1,4 @@
-# import langid
+import langid
 import re
 import os, sys, json, csv
 # import pandas as pd
@@ -6,6 +6,10 @@ import os, sys, json, csv
 # import pybloom_live
 from pathlib import Path
 from urllib.parse import urlparse
+
+def is_valid_text_naive(text):
+    stripped_text = text.strip()
+    return stripped_text and len(stripped_text) > 3
 
 def remove_fragments_from_url(url):
     parsed_url = urlparse(url)
@@ -335,10 +339,10 @@ def remove_file_if_empty(file_path):
 #   return list(news_start_ulrs), urls_visited
 
 
-# def is_nepali_language(text):
-#   lang, confidence = langid.classify(text)
-#   return lang == 'hi', confidence
-#   # is_nepali("बल्ल बुझायो एनसेलले खरिद-बिक्री विवरण")
+def is_nepali_language(text):
+    lang, confidence = langid.classify(text)
+    return lang == 'hi', confidence
+    # is_nepali("बल्ल बुझायो एनसेलले खरिद-बिक्री विवरण")
 
 
 def is_google_drive_link(link):

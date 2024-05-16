@@ -1,4 +1,4 @@
-from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab, remove_fragments_from_url  # is_nepali_language, 
+from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab, remove_fragments_from_url, is_nepali_language, is_valid_text_naive
 import scrapy
 # import pybloom_live
 import scrapy
@@ -59,11 +59,11 @@ class MasterSlave(scrapy.Spider):
         drive_links = []    # Drive links
         site_links = []     # website links
   
-        # yield every paragraph from current page
-        paragraphs = response.css('p::text').getall()
-        for paragraph in paragraphs:
-            # is_nepali, confidence = is_nepali_language(paragraph)
-            if True or is_nepali:   # implement a way to detect nepali language (langid is not reliable)
+        # yield every heading, paragraph from current page
+        headings_and_paragraphs = response.css('h1::text, h2::text, h3::text, h4::text, h5::text, h6::text, p::text').getall()
+        for paragraph in headings_and_paragraphs:
+            is_nepali, confidence = is_nepali_language(paragraph)
+            if is_nepali and is_valid_text_naive(paragraph):   # implement a way to detect nepali language (langid is not reliable)
                 # Save crawled data to redis
                 # self.crawled_data.append(
                 the_crawled_data ={

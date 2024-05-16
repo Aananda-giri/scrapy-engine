@@ -1,4 +1,8 @@
-[ ] Fragmented urls are the one. 
+[ ] is_nepali_paragraph() before saving paragraph
+
+[ ] Remove same urls from mongo that are saved as different urls due to different fragments
+
+[X] Fragmented urls are the one. 
     e.g. URLs: "https://www.bbc.com/nepali/news-63445425" and "https://www.bbc.com/nepali/news-63445425#content" are saved as two different URLs.
 
     solution: remove fragments from url before storing/yielding to crawl
