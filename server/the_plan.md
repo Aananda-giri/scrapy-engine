@@ -1,3 +1,23 @@
+[ ] Fragmented urls are the one. 
+    e.g. URLs: "https://www.bbc.com/nepali/news-63445425" and "https://www.bbc.com/nepali/news-63445425#content" are saved as two different URLs.
+
+    solution: remove fragments from url before storing/yielding to crawl
+    ```
+    from urllib.parse import urlparse
+
+    def remove_fragments_from_url(url):
+        parsed_url = urlparse(url)
+        return parsed_url.scheme + "://" + parsed_url.netloc + parsed_url.path
+
+    # Example usage
+    url1 = "https://www.bbc.com/nepali/news-63445425"
+    url2 = "https://www.bbc.com/nepali/news-63445425#content"
+
+    base_url1 = get_base_url(url1)
+    base_url2 = get_base_url(url2)
+```
+[ ] Identify patterns like english.deshsanchar.com contains news in english
+
 [ ] http://csgrants.gov.np/Home/ViewNoticeNew : AttributeError: Response content isn't text (it is pdf)
 [X] is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
     * remove all bbc.com urls not containing bbc.com/nepali

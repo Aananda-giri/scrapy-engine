@@ -7,6 +7,11 @@ import os, sys, json, csv
 from pathlib import Path
 from urllib.parse import urlparse
 
+def remove_fragments_from_url(url):
+    parsed_url = urlparse(url)
+    return parsed_url.scheme + "://" + parsed_url.netloc + parsed_url.path
+
+
 def load_env_var_in_google_colab():
     # Assuming environment variables are set in google colab Secrets
 

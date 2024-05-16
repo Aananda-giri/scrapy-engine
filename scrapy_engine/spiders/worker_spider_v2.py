@@ -1,4 +1,4 @@
-from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab  # is_nepali_language
+from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab, remove_fragments_from_url  # is_nepali_language, 
 import scrapy
 # import pybloom_live
 import scrapy
@@ -50,8 +50,7 @@ class MasterSlave(scrapy.Spider):
     # def fetch_start_urls(self, number_of_new_urls_required=10):
     #     return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
     def start_requests(self):
-
-        start_urls = [data_item['url'] for data_item in self.mongo.fetch_start_urls()]
+        start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls()]
         print(f'\n\n start:{start_urls} \n\n')
         for url in start_urls:
             yield scrapy.Request(url, callback=self.parse, errback=self.errback_httpbin)  # , dont_filter=True  : allows visiting same url again
@@ -135,22 +134,23 @@ class MasterSlave(scrapy.Spider):
         for site_link in site_links:
             # print(f' \n muji site link: {site_link.url} \n')
             # base_url, crawl_it = should_we_crawl_it(site_link.url)  # self.visited_urls_base,
-            if (is_np_domain(site_link.url) or is_special_domain_to_crawl(site_link.url)): # and site_link.url not in self.visited_urls:
-                # is_same_domain(response.url, site_link.url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
+            de_fragmented_url = remove_fragments_from_url(site_link.url)
+            if (is_np_domain(de_fragmented_url) or is_special_domain_to_crawl(de_fragmented_url)): # and de_fragmented_url not in self.visited_urls:
+                # is_same_domain(response.url, de_fragmented_url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
                 # only follow urls from same domain or other nepali domain and not visited yet
                 if len(self.crawler.engine.slot.inprogress) >= self.crawler.engine.settings.get('CONCURRENT_REQUESTS'):
                     # send new urls_to_crawl to redis.
-                    # self.redis_client.sadd('url_to_crawl', json.dumps(site_link.url))
-                    self.mongo.append_url_to_crawl(site_link.url)
+                    # self.redis_client.sadd('url_to_crawl', json.dumps(de_fragmented_url))
+                    self.mongo.append_url_to_crawl(de_fragmented_url)
                 else:
-                    if self.mongo.append_url_crawling(site_link.url):
+                    if self.mongo.append_url_crawling(de_fragmented_url):
                         # yield url to crawl new urls_to_crawl by itself
-                        yield scrapy.Request(site_link.url, callback=self.parse, errback=self.errback_httpbin)  # dont_filter=True  : allows visiting same url again
+                        yield scrapy.Request(de_fragmented_url, callback=self.parse, errback=self.errback_httpbin)  # dont_filter=True  : allows visiting same url again
                     
-                        # self.to_visit.append(site_link.url)
+                        # self.to_visit.append(de_fragmented_url)
                         
                         # Send crawling notice to server
-                        # self.redis_client.sadd('url_crawling', json.dumps(site_link.url))
+                        # self.redis_client.sadd('url_crawling', json.dumps(de_fragmented_url))
         
         self.mongo.append_url_crawled(response.request.url)
         ''' Note:
@@ -162,7 +162,7 @@ class MasterSlave(scrapy.Spider):
         # Get few more start urls to crawl next
         number_of_new_urls_required = self.crawler.engine.settings.get('CONCURRENT_REQUESTS') - len(self.crawler.engine.slot.inprogress)
         if number_of_new_urls_required > 0:
-            fetched_start_urls = [data_item['url'] for data_item in self.mongo.fetch_start_urls(number_of_new_urls_required)]
+            fetched_start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls(number_of_new_urls_required)]
             if fetched_start_urls:
                 for url in fetched_start_urls:
                         # if url not in self.visited_urls:  # not necessary as we are fetching from mongo
@@ -191,7 +191,7 @@ class MasterSlave(scrapy.Spider):
             self.logger.error('DNSLookupError on %s', request.url)
             
             # Save error data on mongodb
-            error_data = {'url':request.url, 'timestamp':time.time(), 'status':'error', 'error_type':'DNSLookupError'}
+            error_data = {'url':response.url, 'timestamp':time.time(), 'status':'error', 'status_code':response.status, 'error_type':'DNSLookupError'}
             self.mongo.append_error_data(error_data)
             # print(f'\n\n\n\n{error_data}\n\n\n\n\n\n')
 
@@ -200,6 +200,6 @@ class MasterSlave(scrapy.Spider):
             self.logger.error('TimeoutError on %s', request.url)
 
             # Save error data on mongodb
-            error_data = {'url':request.url, 'timestamp':time.time(), 'status':'error', 'error_type':'TimeoutError'}
+            error_data = {'url':response.url, 'timestamp':time.time(), 'status':'error', 'status_code':response.status, 'error_type':'TimeoutError'}
             self.mongo.append_error_data(error_data)
             # print(f'\n\n\n\n{error_data}\n\n\n\n\n\n')
