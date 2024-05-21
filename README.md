@@ -113,7 +113,9 @@ with open('nepali_dataset.csv', 'r') as csvfile:
 
 # Urls to crawl from
 ```
-nepberta_urls = ["https://ekantipur.com/",  "https://onlinekhabar.com/",  "https://nagariknews.com/",  "https://thahakhabar.com/",  "https://ratopati.com/",  "https://reportersnepal.com/",  "https://setopati.com/",  "https://hamrakura.com/",  "https://lokpath.com/",  "https://abhiyandaily.com/",  "https://pahilopost.com/",  "https://lokaantar.com/",  "https://dcnepal.com/",  "https://nayapage.com/",  "https://nayapatrikadaily.com/",  "https://everestdainik.com/",  "https://imagekhabar.com/",  "https://shilapatra.com/",  "https://khabarhub.com/",  "https://baahrakhari.com/",  "https://ujyaaloonline.com/",  "https://nepalkhabar.com/",  "https://emountaintv.com/",  "https://kathmandupress.com/",  "https://farakdhar.com/",  "https://kendrabindu.com/",  "https://dhangadhikhabar.com/",  "https://gorkhapatraonline.com/",  "https://nepalpress.com/",  "https://hamrokhelkud.com/",  "https://himalkhabar.com/",  "https://nepallive.com/",  "https://nepalsamaya.com/",  "https://kalakarmi.com/",  "https://dainiknewsnepal.com/"]
+["https://kantipurtv.com/", "https://www.janaboli.com/", "https://ekagaj.com/", "https://www.nepalviews.com/", "https://hib.gov.np/", "https://butwalmun.gov.np/", "https://swasthyakhabar.com/", "https://hetaudamun.gov.np/", "https://hr.parliament.gov.np/", "https://www.immigration.gov.np/", "https://pppc.bagamati.gov.np/newsandnotices", "http://mahakalimundarchula.gov.np/taxonomy/term/110", "https://www.dor.gov.np/home/news", "https://np.usembassy.gov/ne/", "https://lawcommission.gov.np/np/", "https://sabailamun.gov.np/ne/", "https://daokathmandu.moha.gov.np/", "https://barjumun.gov.np/", "https://na.parliament.gov.np/", "https://panchkhalmun.gov.np/ne/news-notices", "https://moics.gov.np/", "https://www.dor.gov.np/"]
+
+nepberta_urls = [ "https://ekantipur.com/",  "https://onlinekhabar.com/",  "https://nagariknews.com/",  "https://thahakhabar.com/",  "https://ratopati.com/",  "https://reportersnepal.com/",  "https://setopati.com/",  "https://hamrakura.com/",  "https://lokpath.com/",  "https://abhiyandaily.com/",  "https://pahilopost.com/",  "https://lokaantar.com/",  "https://dcnepal.com/",  "https://nayapage.com/",  "https://nayapatrikadaily.com/",  "https://everestdainik.com/",  "https://imagekhabar.com/",  "https://shilapatra.com/",  "https://khabarhub.com/",  "https://baahrakhari.com/",  "https://ujyaaloonline.com/",  "https://nepalkhabar.com/",  "https://emountaintv.com/",  "https://kathmandupress.com/",  "https://farakdhar.com/",  "https://kendrabindu.com/",  "https://dhangadhikhabar.com/",  "https://gorkhapatraonline.com/",  "https://nepalpress.com/",  "https://hamrokhelkud.com/",  "https://himalkhabar.com/",  "https://nepallive.com/",  "https://nepalsamaya.com/",  "https://kalakarmi.com/",  "https://dainiknewsnepal.com/", "https://www.newsofnepal.com", "https://deshsanchar.com/"]
 
 
 '''
@@ -131,7 +133,7 @@ have_crawled_incomplete = ["https://hamrakura.com/", "https://onlinekhabar.com/"
 
 need_special_attention = ["https://www.bbc.com/nepali", "https://beta.gorkhapatraonline.com/epapermaincategory", "https://epaper.gorkhapatraonline.com/", "https://ujyaaloonline.com/" -> 403 response by cloudfare]
 '''
-bbc_nepali: avoid following links that does not start with: bbc.com/nepali
+[X] bbc_nepali: avoid following links that does not start with: bbc.com/nepali
 gorkhapatra: it would be nice to crawl pdfs of gorkhapatra
             problem is: I coudn't find their encoding scheme
 '''

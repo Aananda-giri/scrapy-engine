@@ -409,7 +409,7 @@ def is_np_domain(url):
 
 def is_special_domain_to_crawl(url):
     # crawl some non '.np' domains
-    return url.startswith("https://www.bbc.com/nepali/")
+    return url.startswith("https://www.bbc.com/nepali/") or url.startswith("https://np.usembassy.gov/ne/")
 
 
 def should_we_crawl_it(new_url, visited_urls_base=None):

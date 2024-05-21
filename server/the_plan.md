@@ -1,4 +1,8 @@
-[ ] is_nepali_paragraph() before saving paragraph
+[ ] Merge V1 Data with V2 Data.
+[ ] Look for new updates from already crawled base urls like new daily news.
+
+
+[X] is_nepali_paragraph() before saving paragraph
 
 [ ] Remove same urls from mongo that are saved as different urls due to different fragments
 
@@ -52,7 +56,7 @@
 
 [X] first step of def parse(): check mongo if url is already crawled or url_crawling
 
-[ ] * crawl headings along with paragraphs.
+[X] * crawl headings along with paragraphs.
 
 [X] * remove from (db.to_crawl or db.crawling) once (Crawled_data or other_date).parent_url is obtained
 [ ] * collect code and run using threading.
