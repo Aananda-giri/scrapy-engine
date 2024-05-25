@@ -67,8 +67,8 @@ def display_stats():
         # Formatted output
         print("\n #  *********** Crawl Queue Status ***********")
         print(f"To Crawl: {locale.format_string('%d', to_crawl_count, grouping=True)}")
-        print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
         print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
+        print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
         
         db=mongo.db
         # Get database stats
