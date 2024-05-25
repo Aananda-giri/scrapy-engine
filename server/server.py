@@ -192,7 +192,6 @@ def consumer():
 
 '''
 
-save_to_csv(combined_data)
 def save_to_csv(data, data_type="crawled_data"):
     for key, data_items in data.items():
         csv_file_path = key + ".csv"
