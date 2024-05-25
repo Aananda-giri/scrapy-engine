@@ -24,6 +24,9 @@ REDIS_HOST='<redis-host>'
 ## Test run the scrapy-engine
 `scrapy crawl worker_spider_v2 -o worker_spider_v2.json`
 
+## To run worker in google colab:
+* refer to : `scrapy_engine_google_colab.ipynb`
+
 ### To run the server
 ```
 cd server
