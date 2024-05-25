@@ -1,3 +1,10 @@
+# Scrapy is too slow (0-10 pages per minute):
+Settings:
+```
+COOKIES_ENABLED=False   # Enabled by default
+CONCURRENT_REQUESTS     # 100
+```
+
 [ ] Merge V1 Data with V2 Data.
 [ ] Look for new updates from already crawled base urls like new daily news.
 
