@@ -90,7 +90,7 @@ def pop_from_mongo():
     if not crawled_data and not other_data:
         display_stats()
         print('========sleeping for 5 sec.....==========')   # No Data
-        time.sleep(5)
+        time.sleep(10)
     combined_data = {"crawled_data":crawled_data, "other_data":other_data}
     
     # Save to .csv file
@@ -99,8 +99,9 @@ def pop_from_mongo():
     # Delete multiple data by id
     mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-    logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
+    
     if len(crawled_data)>0:
+        logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
         print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
 def backup_crawled_data():
