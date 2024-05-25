@@ -60,7 +60,7 @@ def display_stats():
         # there is no data
         # length of to_crawl
         to_crawl_count = mongo.collection.count_documents({"status": "to_crawl"})
-        crawling_count = mongo.collection.count_documents({"status": "crawaling"})
+        crawling_count = mongo.collection.count_documents({"status": "crawling"})
         crawled_count = mongo.collection.count_documents({"status": "crawled"})
         
         # Nice formatted view for to_crawl, crawled and crawling
