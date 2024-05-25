@@ -7,6 +7,8 @@ import shutil
 import threading
 from mongo import Mongo
 
+import locale
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -51,7 +53,31 @@ thread.start()
 # ======================================================
 
 
-
+def display_stats():
+        # -----------------------------------------------------------------------
+        # --------------------------------- Stats ------------------------------- 
+        # -----------------------------------------------------------------------
+        # there is no data
+        # length of to_crawl
+        to_crawl_count = mongo.collection.count_documents({"status": "to_crawl"})
+        crawling_count = mongo.collection.count_documents({"status": "crawaling"})
+        crawled_count = mongo.collection.count_documents({"status": "crawled"})
+        
+        # Nice formatted view for to_crawl, crawled and crawling
+        # Formatted output
+        print("\n #  *********** Crawl Queue Status ***********")
+        print(f"To Crawl: {locale.format_string('%d', to_crawl_count, grouping=True)}")
+        print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
+        print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
+        
+        db=mongo.db
+        # Get database stats
+        stats = db.command("dbstats")
+        # Print the stats
+        print("DB Size: ", stats['dataSize']/(1024*1024))
+        print("Storage Size: ", stats['storageSize']/(1024*1024))
+        print("Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n\n")
+        # -----------------------------------------------------------------------
 
 # ======================================================
 # Save data from redis to csv file
@@ -62,7 +88,7 @@ def pop_from_mongo():
     other_data = list(mongo.db['other_data'].find())
     print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
     if not crawled_data and not other_data:
-        # there is no data
+        display_stats()
         print('========sleeping for 5 sec.....==========')   # No Data
         time.sleep(5)
     combined_data = {"crawled_data":crawled_data, "other_data":other_data}
@@ -166,7 +192,7 @@ def consumer():
 
 '''
 
-
+save_to_csv(combined_data)
 def save_to_csv(data, data_type="crawled_data"):
     for key, data_items in data.items():
         csv_file_path = key + ".csv"
