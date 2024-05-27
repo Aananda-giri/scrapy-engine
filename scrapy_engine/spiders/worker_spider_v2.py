@@ -80,7 +80,7 @@ class MasterSlave(scrapy.Spider):
                 # Old Code using Redis: Redis turned out to be too slow for concurrent processes
                 self.redis_client.lpush('crawled_data', json.dumps(the_crawled_data))
                 '''
-        self.mongo.db['crawled_data'].insert_many(the_crawled_data)
+        if the_crawled_data:self.mongo.db['crawled_data'].insert_many(the_crawled_data)
         # Saving drive links
         the_other_data =  []    # list for bulk upload
         for link in links:
@@ -134,7 +134,7 @@ class MasterSlave(scrapy.Spider):
                         '''
                     else:
                         site_links.append(link)
-        self.mongo.db['other_data'].insert_many(the_other_data)
+        if the_crawled_data: self.mongo.db['other_data'].insert_many(the_crawled_data)
 
         # Next Page to Follow: 
         the_to_crawl_urls = []    # list for bulk upload
@@ -162,7 +162,7 @@ class MasterSlave(scrapy.Spider):
                         
                 #         # Send crawling notice to server
                 #         # self.redis_client.sadd('url_crawling', json.dumps(de_fragmented_url))
-        self.mongo.append_url_to_crawl(the_to_crawl_urls)
+        if the_to_crawl_urls: self.mongo.append_url_to_crawl(the_to_crawl_urls)
         # append crawled url to visited urls
         self.mongo.append_url_crawled(response.request.url)
         ''' Note:
