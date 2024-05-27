@@ -73,6 +73,7 @@ def display_stats():
         print("=================================================")
         print("\n #  *********** Crawl Queue Status ***********")
         print("=================================================")
+        print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
         print(f"To Crawl: {locale.format_string('%d', to_crawl_count, grouping=True)}")
         print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
         print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
