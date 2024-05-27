@@ -117,7 +117,7 @@ class Mongo():
                 {'$set': {'status':'crawling'}}
             )
         
-        return urls
+        return random_urls
     def fetch_all(self):
         return list(self.collection.find())
 
