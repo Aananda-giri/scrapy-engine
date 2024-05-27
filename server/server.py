@@ -114,7 +114,7 @@ def display_stats():
 # sqlite to save crawled and to_crawl urls (mongo is full)
 # =========================================================
 
-def to_crawl_cleanup_thread():
+def to_crawl_cleanup():
     while True:    
         # Get all urls from "to_crawl?"
         urls = mongo.collection.find({"status": 'to_crawl?'})
@@ -128,7 +128,10 @@ def to_crawl_cleanup_thread():
         # delete from mongo
         mongo.collection.delete_many([{'url': url[0], 'status': 'to_crawl?'} for url in to_crawl_urls])
 
-def mongo_to_crawl_refill_thread():
+        # Sleep for 5 minutes
+        time.sleep(5 * 60)
+
+def mongo_to_crawl_refill():
     while True:
         if mongo.collection.count_documents({"status": 'to_crawl'}) < 100000:
             new_to_crawl_urls = url_db.fetch('to_crawl', 100000)
@@ -165,7 +168,8 @@ def mongo_to_crawl_refill_thread():
                 # exit the python script
                 sys.exit(1)
         
-
+        # Sleep for 3 hours
+        time.sleep(3 * 60 * 60)
 
 
 # ======================================================
@@ -350,21 +354,28 @@ def consumer():
             time.sleep(5)  # sleep for a while before consuming more items
         '''
 
+mongo_to_crawl_refill_thread = threading.Thread(target=mongo_to_crawl_refill)
+mongo_to_crawl_refill_thread.daemon = True
+mongo_to_crawl_refill_thread.start()
 
-consumer_thread = threading.Thread(target=consumer)
-backup_thread = threading.Thread(target=backup_crawled_data)
+to_crawl_cleanup_thread = threading.Thread(target=to_crawl_cleanup)
+to_crawl_cleanup_thread.daemon = True
+to_crawl_cleanup_thread.start()
+
 display_stats_thread = threading.Thread(target=display_stats)
-
-backup_thread.daemon = True
 display_stats_thread.daemon = True
 display_stats_thread.start()
+
+backup_thread = threading.Thread(target=backup_crawled_data)
+backup_thread.daemon = True
 backup_thread.start()
 
+consumer_thread = threading.Thread(target=consumer)
 consumer_thread.daemon = True   # daemon threads are forcefully shut down when Python exits and programme waits for non-daemon threads to finish their tasks.
+consumer_thread.start()
 
 # Start the thread
 # producer_thread.start()
-consumer_thread.start()
 # publisher_thread.start()
 
 # Wait for both threads to finish
