@@ -129,10 +129,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         # Save to sqlite
         # Insert the data into the database
         url_db.bulk_insert("crawled", to_crawl_urls)
-
-        # delete from mongo
-        mongo.collection.delete_many([{'url': url[0], 'status': 'to_crawl?'} for url in to_crawl_urls])
-
+        
         # Sleep for 5 minutes
         time.sleep(5 * 60)
         
