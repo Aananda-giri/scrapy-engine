@@ -83,7 +83,7 @@ def display_stats():
         # Print the stats
         print("DB Size: ", stats['dataSize']/(1024*1024))
         print("Storage Size: ", stats['storageSize']/(1024*1024))
-        print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n-----------------------------------------------")
+        print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n-----------------------------------------------\n")
         
         # Crawling Rate
         newly_crawled = crawled_count - number_of_links_crawled_at_start
