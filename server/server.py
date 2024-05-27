@@ -9,7 +9,7 @@ import threading
 
 
 from sqlite_handler import URLDatabase
-url_db = URLDatabase(db_path="urls.db")
+# url_db = URLDatabase(db_path="urls.db")
 
 from mongo import Mongo
 mongo = Mongo()
@@ -119,6 +119,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         * creating a giant thread to avoid concurrency issues
         * This thread will run once every 1.5 hours
     '''
+    url_db = URLDatabase(db_path="urls.db")
     while True:    
         # Get all urls from "to_crawl?"
         urls = mongo.collection.find({"status": 'to_crawl?'})
