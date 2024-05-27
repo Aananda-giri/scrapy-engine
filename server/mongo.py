@@ -48,12 +48,22 @@ class Mongo():
                 return False
     
     def append_url_to_crawl(self, url):
-        try:
-            # Try inserting url
-            self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'to_crawl'})
-            return True # inserted
-        except  Exception as ex:
-            return False    # url exists
+        if type(url) == list:
+            # Insert multiple urls
+            '''
+            ordered=False: If an error occurs during the processing of one of the write operations, MongoDB will continue to process remaining write operations in the queue.
+            '''
+            try:
+                self.collection.insert_many([{'url':u, 'timestamp':time.time(), 'status':'to_crawl'} for u in url], ordered=False)
+            except Exception as ex:
+                print(ex)
+        elif type(url) == str:
+            try:
+                # Try inserting url
+                self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'to_crawl'})
+                return True # inserted
+            except  Exception as ex:
+                print(ex)    # url exists
 
     def append_error_data(self, data):
         # Delete url if it's status is either 'to_crawl' or crawling
@@ -72,11 +82,17 @@ class Mongo():
 
     def recover_expired_crawling(self, created_before=7200):
         def convert_from_crawling_to_to_crawl(urls):
-            for url in urls:
-                self.collection.update_one(
-                    {'_id':url['_id'], 'status': {'$in': ['crawling']}},
+            # for url in urls:
+            #     self.collection.update_one(
+            #         {'_id':url['_id'], 'status': {'$in': ['crawling']}},
+            #         {'$set': {'status':'to_crawl'}}
+            #         )
+            # perform bulk update
+            if urls:
+                self.collection.update_many(
+                    {'_id': {'$in': [url['_id'] for url in urls]}},
                     {'$set': {'status':'to_crawl'}}
-                    )
+                )
 
         # get items with status 'crawling' and before timestamp 2 hours (7200)
         timestamp = time.time() - created_before  # 2 hours ago
@@ -88,11 +104,18 @@ class Mongo():
         # return [json.loads(url) for url in self.redis_client.srandmember('urls_to_crawl_cleaned_set', number_of_new_urls_required)]
         
         # Get all entries with  status 'to_crawl'
-        urls = list(self.collection.find({'status':'to_crawl'}).limit(number_of_urls_required))
+        random_urls = list(self.collection.aggregate([
+            {"$match": {"status": "to_crawl"}},
+            {"$sample": {"size": number_of_urls_required}}
+        ]))
+        # urls = list(self.collection.find({'status':'to_crawl'}).limit(number_of_urls_required))
 
-        ## update status to crawling
-        for url in urls:
-            self.collection.update_one({'_id':url['_id']}, {'$set': {'status':'crawling'}})
+        # perform bulk update
+        if random_urls:
+            self.collection.update_many(
+                {'_id': {'$in': [url['_id'] for url in random_urls]}},
+                {'$set': {'status':'crawling'}}
+            )
         
         return urls
     def fetch_all(self):

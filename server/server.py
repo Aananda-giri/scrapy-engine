@@ -95,7 +95,7 @@ def display_stats():
         print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
         
         # Get Crawled File Size
-        print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB", end="\n-----------------------------------------------")
+        print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB", end="\n-----------------------------------------------\n")
         # -----------------------------------------------------------------------
 
         # Sleep for 1 minute

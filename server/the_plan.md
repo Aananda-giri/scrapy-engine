@@ -1,4 +1,22 @@
-# Expected time to crawl all to_crawl
+
+
+# Scrapy is too slow (0-10 pages per minute):
+Settings:
+```
+COOKIES_ENABLED=False   # Enabled by default
+CONCURRENT_REQUESTS     # 100
+
+AUTOTHROTTLE_ENABLED=False
+    * problems: have to adjust CONCURRENT_REQUESTS right (manual tuning for google colab)
+    * risk getting banned: get random_urls while fetching url to_crawl
+    ```
+        to_crawl = list(mongo.collection.aggregate([
+            {"$match": {"status": "to_crawl"}},
+            {"$sample": {"size": 10}}
+        ]))
+    ```
+
+# Stats: Display Expected time to crawl all to_crawl
 ```
 while True:
     crawl
@@ -12,13 +30,6 @@ while True:
 ### Calculating overall crawling_rate from begining instead
 while True:
     crawl
-
-# Scrapy is too slow (0-10 pages per minute):
-Settings:
-```
-COOKIES_ENABLED=False   # Enabled by default
-CONCURRENT_REQUESTS     # 100
-```
 
 [ ] Merge V1 Data with V2 Data.
 [ ] Look for new updates from already crawled base urls like new daily news.
