@@ -39,7 +39,7 @@ class URLDatabase:
 
    
 
-    def bulk_insert(self, table, url_timestamp_pairs):
+    def bulk_insert(self, table, url_timestamp_pairs, show_progress=True):
         try:
             self.conn.execute('BEGIN')
 
@@ -53,9 +53,10 @@ class URLDatabase:
                 except sqlite3.Error as e:
                     print(f"Failed to insert {url} into {table}: {e}")
 
-                # Update the progress bar every 'step' items
-                if i % step == 0:
-                    print(f"Progress: {i / total * 100:.2f}%")
+                if show_progress:
+                    # Update the progress bar every 'step' items
+                    if i % step == 0:
+                        print(f"Progress: {i / total * 100:.2f}%")
 
             self.conn.commit()
         except sqlite3.Error as e:

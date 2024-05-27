@@ -128,7 +128,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
 
         # Save to sqlite
         # Insert the data into the database
-        url_db.bulk_insert("crawled", to_crawl_urls)
+        if to_crawl_urls: url_db.bulk_insert("crawled", to_crawl_urls, show_progress=False)
         
         # Sleep for 5 minutes
         time.sleep(5 * 60)
