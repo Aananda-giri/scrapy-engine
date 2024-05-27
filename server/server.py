@@ -114,7 +114,11 @@ def display_stats():
 # sqlite to save crawled and to_crawl urls (mongo is full)
 # =========================================================
 
-def to_crawl_cleanup():
+def to_crawl_cleanup_and_mongo_to_crawl_refill():
+    '''
+        * creating a giant thread to avoid concurrency issues
+        * This thread will run once every 1.5 hours
+    '''
     while True:    
         # Get all urls from "to_crawl?"
         urls = mongo.collection.find({"status": 'to_crawl?'})
@@ -130,9 +134,11 @@ def to_crawl_cleanup():
 
         # Sleep for 5 minutes
         time.sleep(5 * 60)
-
-def mongo_to_crawl_refill():
-    while True:
+        
+        # -----------------------
+        # mongo_to_crawl_refill
+        # -----------------------
+        
         if mongo.collection.count_documents({"status": 'to_crawl'}) < 100000:
             new_to_crawl_urls = url_db.fetch('to_crawl', 100000)
             n_failed_to_upload = 0
@@ -168,8 +174,8 @@ def mongo_to_crawl_refill():
                 # exit the python script
                 sys.exit(1)
         
-        # Sleep for 3 hours
-        time.sleep(3 * 60 * 60)
+        # Sleep for 1.5 hours
+        time.sleep(1 * 60 * 60)
 
 
 # ======================================================
@@ -354,13 +360,9 @@ def consumer():
             time.sleep(5)  # sleep for a while before consuming more items
         '''
 
-mongo_to_crawl_refill_thread = threading.Thread(target=mongo_to_crawl_refill)
-mongo_to_crawl_refill_thread.daemon = True
-mongo_to_crawl_refill_thread.start()
-
-to_crawl_cleanup_thread = threading.Thread(target=to_crawl_cleanup)
-to_crawl_cleanup_thread.daemon = True
-to_crawl_cleanup_thread.start()
+to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
+to_crawl_cleanup_and_mongo_to_crawl_refill_thread.daemon = True
+to_crawl_cleanup_and_mongo_to_crawl_refill_thread.start()
 
 display_stats_thread = threading.Thread(target=display_stats)
 display_stats_thread.daemon = True
