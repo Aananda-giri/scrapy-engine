@@ -1,6 +1,8 @@
 
 
 # Scrapy is too slow (0-10 pages per minute):
+[X] bulk operations on mongodb instead of individual operations
+[ ] Async mongo operations?
 Settings:
 ```
 COOKIES_ENABLED=False   # Enabled by default
@@ -14,7 +16,7 @@ AUTOTHROTTLE_ENABLED=False
             {"$match": {"status": "to_crawl"}},
             {"$sample": {"size": 10}}
         ]))
-    ```
+```
 
 # Stats: Display Expected time to crawl all to_crawl
 ```

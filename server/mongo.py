@@ -56,14 +56,16 @@ class Mongo():
             try:
                 self.collection.insert_many([{'url':u, 'timestamp':time.time(), 'status':'to_crawl'} for u in url], ordered=False)
             except Exception as ex:
-                print(ex)
+                pass
+                # print(ex)
         elif type(url) == str:
             try:
                 # Try inserting url
                 self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'to_crawl'})
                 return True # inserted
             except  Exception as ex:
-                print(ex)    # url exists
+                pass
+                # print(ex)    # url exists
 
     def append_error_data(self, data):
         # Delete url if it's status is either 'to_crawl' or crawling
