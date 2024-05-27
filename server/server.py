@@ -91,7 +91,7 @@ def display_stats():
         time_taken = time.time() - start_time
         crawling_rate = newly_crawled / time_taken
         # print(f"Crawling Rate: {locale.format_string('%d', crawling_rate, grouping=True)} links/sec")
-        expected_time_to_crawl = to_crawl_count / (crawling_rate if crawling_rate > 0 else 1)
+        expected_time_to_crawl = to_crawl_count / (crawling_rate if crawling_rate > 0 else 0.0000001)
         print(f"Crawling Rate: {crawling_rate} links/sec")
         print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
         
