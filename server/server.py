@@ -295,7 +295,7 @@ def consumer():
 
 
 def save_to_csv(data, data_type="crawled_data"):
-    sqlite_db = URLDatabase(db_path="urls.db")
+    
     for data_type, data_items in data.items():
         '''
             data_type: crawled_data, other_data
@@ -321,12 +321,14 @@ def save_to_csv(data, data_type="crawled_data"):
                     if data_type == 'crawled_data':
                         for data_item in data_items:
                             csv_writer.writerow(data_item)
-
+                            
+                            sqlite_db = URLDatabase(db_path="urls.db")
                             if sqlite_db.exists("to_crawl",  data_item['parent_url']):
                                 # delete the url from to_crawl
                                 sqlite_db.delete("to_crawl", data_item['parent_url'])
                                 # insert the url to crawled
                                 sqlite_db.insert("crawled", data_item['parent_url'])
+                            sqlite_db.close()
 
                 except Exception as ex:
                     print(ex)
