@@ -70,7 +70,9 @@ def display_stats():
         
         # Nice formatted view for to_crawl, crawled and crawling
         # Formatted output
+        print("=================================================")
         print("\n #  *********** Crawl Queue Status ***********")
+        print("=================================================")
         print(f"To Crawl: {locale.format_string('%d', to_crawl_count, grouping=True)}")
         print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
         print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
@@ -81,7 +83,7 @@ def display_stats():
         # Print the stats
         print("DB Size: ", stats['dataSize']/(1024*1024))
         print("Storage Size: ", stats['storageSize']/(1024*1024))
-        print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n\n")
+        print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n-----------------------------------------------")
         
         # Crawling Rate
         newly_crawled = crawled_count - number_of_links_crawled_at_start
@@ -92,7 +94,7 @@ def display_stats():
         print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
         
         # Get Crawled File Size
-        print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB")
+        print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB", end="\n-----------------------------------------------")
         # -----------------------------------------------------------------------
 
         # Sleep for 1 minute
@@ -105,7 +107,7 @@ def display_stats():
 def pop_from_mongo():
     crawled_data = list(mongo.db['crawled_data'].find())
     other_data = list(mongo.db['other_data'].find())
-    print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
+    # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
     if not crawled_data and not other_data:
         # display_stats()
         # print('========sleeping for 5 sec.....==========')   # No Data
