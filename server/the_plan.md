@@ -5,10 +5,11 @@
 [ ] Async mongo operations?
 Settings:
 ```
-COOKIES_ENABLED=False   # Enabled by default
-CONCURRENT_REQUESTS     # 100
+[X] COOKIES_ENABLED=False   # Enabled by default
+[ ] CONCURRENT_REQUESTS     # 100
 
-AUTOTHROTTLE_ENABLED=False
+[ ] CONCURRENT_REQUESTS_PER_IP
+[ ] AUTOTHROTTLE_ENABLED=False
     * problems: have to adjust CONCURRENT_REQUESTS right (manual tuning for google colab)
     * risk getting banned: get random_urls while fetching url to_crawl
     ```
@@ -16,7 +17,11 @@ AUTOTHROTTLE_ENABLED=False
             {"$match": {"status": "to_crawl"}},
             {"$sample": {"size": 10}}
         ]))
+[ ] AUTOTHROTTLE_ENABLED=True:
+    [ ] sDOWNLOAD_DELAY (minimum delay time)
+    [ ] AUTOTHROTTLE_MAX_DELAY 
 ```
+* [Reference: ](https://stackoverflow.com/questions/57128618/how-can-i-speed-up-scrapy-crawl)
 
 # Stats: Display Expected time to crawl all to_crawl
 ```
