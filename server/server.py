@@ -9,7 +9,6 @@ import threading
 
 
 from sqlite_handler import URLDatabase
-sqlite_db = URLDatabase(db_path="urls.db")
 
 from mongo import Mongo
 mongo = Mongo()
@@ -181,6 +180,8 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
 # ======================================================
 
 def pop_from_mongo():
+    sqlite_db = URLDatabase(db_path="urls.db")
+    
     crawled_data = list(mongo.db['crawled_data'].find())
     other_data = list(mongo.db['other_data'].find())
     # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
