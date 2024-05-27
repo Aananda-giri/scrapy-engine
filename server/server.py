@@ -9,7 +9,7 @@ import threading
 
 
 from sqlite_handler import URLDatabase
-# url_db = URLDatabase(db_path="urls.db")
+sqlite_db = URLDatabase(db_path="urls.db")
 
 from mongo import Mongo
 mongo = Mongo()
@@ -322,11 +322,11 @@ def save_to_csv(data, data_type="crawled_data"):
                         for data_item in data_items:
                             csv_writer.writerow(data_item)
 
-                            if url_db.exists("to_crawl",  data_item['parent_url']):
+                            if sqlite_db.exists("to_crawl",  data_item['parent_url']):
                                 # delete the url from to_crawl
-                                url_db.delete("to_crawl", data_item['parent_url'])
+                                sqlite_db.delete("to_crawl", data_item['parent_url'])
                                 # insert the url to crawled
-                                url_db.insert("crawled", data_item['parent_url'])
+                                sqlite_db.insert("crawled", data_item['parent_url'])
 
                 except Exception as ex:
                     print(ex)
