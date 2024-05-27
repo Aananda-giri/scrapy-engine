@@ -134,7 +134,7 @@ class MasterSlave(scrapy.Spider):
                         '''
                     else:
                         site_links.append(link)
-        if the_crawled_data: self.mongo.db['other_data'].insert_many(the_crawled_data)
+        if the_other_data: self.mongo.db['other_data'].insert_many(the_other_data)
 
         # Next Page to Follow: 
         the_to_crawl_urls = []    # list for bulk upload

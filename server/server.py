@@ -121,7 +121,7 @@ def pop_from_mongo():
     
     # Save to .csv file
     save_to_csv(combined_data)
-
+    
     # Delete multiple data by id
     mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
@@ -220,9 +220,13 @@ def consumer():
 
 '''
 
+
 def save_to_csv(data, data_type="crawled_data"):
-    for key, data_items in data.items():
-        csv_file_path = key + ".csv"
+    for data_type, data_items in data.items():
+        '''
+            data_type: crawled_data, other_data
+        '''
+        csv_file_path = data_type + ".csv"
         if data_items:
             # field_names = ['paragraph', 'parent_url', 'page_title', 'is_nepali_confidence']
             field_names = data_items[0].keys()
@@ -232,13 +236,18 @@ def save_to_csv(data, data_type="crawled_data"):
             with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
                 # Create a CSV writer object
                 csv_writer = csv.DictWriter(csvfile, fieldnames=field_names)
-
+                
                 # If the file doesn't exist, write the header
                 if not file_exists:
                     csv_writer.writeheader()
-
-                # Append the new data
-                csv_writer.writerows(data_items)
+                
+                try:
+                    # Append the new data
+                    csv_writer.writerows(data_items)
+                except Exception as ex:
+                    print(ex)
+                    # log the error
+                    logging.exception(f'data_type:{data_type} exceptionL {ex}')
 
 def consumer():
     print('consumer')

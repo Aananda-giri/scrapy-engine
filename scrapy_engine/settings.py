@@ -25,7 +25,7 @@ CONCURRENT_REQUESTS =  15 # 10 for replit # 32
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 1 # 3
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -72,7 +72,7 @@ AUTOTHROTTLE_ENABLED = True # dynamically adjusts the download delay based on se
 # The initial download delay
 AUTOTHROTTLE_START_DELAY = 2#5
 # The maximum download delay to be set in case of high latencies
-AUTOTHROTTLE_MAX_DELAY = 60
+AUTOTHROTTLE_MAX_DELAY = 30# 60
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
@@ -93,10 +93,10 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 
-# LOG_LEVEL='INFO'    # overview of program execution
+LOG_LEVEL='INFO'    # overview of program execution
 #LOG_LEVEL='DEBUG'   # detailed information about program execution
 #LOG_LEVEL='WARNING' # only show warnings and errors
-LOG_LEVEL='ERROR'   # only show errors
+# LOG_LEVEL='ERROR'   # only show errors
 #LOG_LEVEL='CRITICAL' # only show critical errors
 #LOG_LEVEL='NOTSET'  # show everything
 
