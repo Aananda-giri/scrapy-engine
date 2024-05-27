@@ -164,7 +164,7 @@ class MasterSlave(scrapy.Spider):
                 #         # self.redis_client.sadd('url_crawling', json.dumps(de_fragmented_url))
         if the_to_crawl_urls: self.mongo.append_url_to_crawl(the_to_crawl_urls)
         # append crawled url to visited urls
-        self.mongo.append_url_crawled(response.request.url)
+        # self.mongo.append_url_crawled(response.request.url)
         ''' Note:
             If a url redirects to another url, then the original url is added to visited urls so as to not to visit it again.
             redirected url is sent via crawled_data and other_data then update visited_url.

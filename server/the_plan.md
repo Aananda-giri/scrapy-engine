@@ -1,3 +1,5 @@
+# problem: No mechanism to handle duplicate data to csv
+[ ] check duplciacy before inserting to csv
 
 
 # Scrapy is too slow (0-10 pages per minute):

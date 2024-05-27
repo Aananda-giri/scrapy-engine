@@ -1,11 +1,18 @@
 import os
+import sys
 import time
 import csv
 import json
 import redis
 import shutil
 import threading
+
+
+from sqlite_handler import URLDatabase
+url_db = URLDatabase(db_path="urls.db")
+
 from mongo import Mongo
+mongo = Mongo()
 
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -35,7 +42,7 @@ except Exception as ex:
 # Crawling  ==> to_crawl (if timestamp >2 hours)
 # ======================================================
 
-mongo = Mongo()
+
 start_time = time.time()
 number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "crawled"})
 
@@ -101,6 +108,65 @@ def display_stats():
 
         # Sleep for 1 minute
         time.sleep(60)
+
+
+# =========================================================
+# sqlite to save crawled and to_crawl urls (mongo is full)
+# =========================================================
+
+def to_crawl_cleanup_thread():
+    while True:    
+        # Get all urls from "to_crawl?"
+        urls = mongo.collection.find({"status": 'to_crawl?'})
+        to_crawl_urls = [(url['url'], url['timestamp']) for url in list(urls)]
+        # to_crawl_urls
+
+        # Save to sqlite
+        # Insert the data into the database
+        url_db.bulk_insert("crawled", to_crawl_urls)
+
+        # delete from mongo
+        mongo.collection.delete_many([{'url': url[0], 'status': 'to_crawl?'} for url in to_crawl_urls])
+
+def mongo_to_crawl_refill_thread():
+    while True:
+        if mongo.collection.count_documents({"status": 'to_crawl'}) < 100000:
+            new_to_crawl_urls = url_db.fetch('to_crawl', 100000)
+            n_failed_to_upload = 0
+            try:
+                # insert many
+                mongo.collection.insert_many([{'url': url[0], 'status': 'to_crawl', 'timestamp': url[1]} for url in new_to_crawl_urls], ordered=False)
+            except Exception as bwe:
+                # pass
+                # Get the details of the operations that failed
+                failed_ops = bwe.details['writeErrors']
+                
+
+                # Get the documents that failed to insert
+                failed_docs = [op['op'] for op in failed_ops]
+
+                # Get the URLs that failed to insert
+                urls_failed_to_upload_to_mongo = [(doc['url'], doc['timestamp']) for doc in failed_docs]
+                n_failed_to_upload = len(urls_failed_to_upload_to_mongo)
+                # for url in urls_failed_to_upload_to_mongo:
+                #     logging.error(f"Failed to upload {url} to MongoDB")
+                # success_urls = [url for url in new_to_crawl_urls if url not in urls_failed_to_upload_to_mongo]
+
+                # # Delete successful urls from sqlite
+                # url_db.delete("to_crawl", success_urls)
+                # # print(f'success_urls:{success_urls}, len:{len(success_urls)}')
+                # print(failed_urls, len(failed_urls))
+            # # delete from sqlite
+            if n_failed_to_upload < 10000:
+                url_db.delete("to_crawl", new_to_crawl_urls)
+                # print(n_failed_to_upload)
+            else:
+                print(f'failed to upload {n_failed_to_upload} urls to mongo')
+                # exit the python script
+                sys.exit(1)
+        
+
+
 
 # ======================================================
 # Save data from redis to csv file
@@ -242,8 +308,18 @@ def save_to_csv(data, data_type="crawled_data"):
                     csv_writer.writeheader()
                 
                 try:
-                    # Append the new data
-                    csv_writer.writerows(data_items)
+                    # # Append the new data
+                    # csv_writer.writerows(data_items)
+                    if data_type == 'crawled_data':
+                        for data_item in data_items:
+                            csv_writer.writerow(data_item)
+
+                            if url_db.exists("to_crawl",  data_item['parent_url']):
+                                # delete the url from to_crawl
+                                url_db.delete("to_crawl", data_item['parent_url'])
+                                # insert the url to crawled
+                                url_db.insert("crawled", data_item['parent_url'])
+
                 except Exception as ex:
                     print(ex)
                     # log the error

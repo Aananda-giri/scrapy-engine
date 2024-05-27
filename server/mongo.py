@@ -54,14 +54,14 @@ class Mongo():
             ordered=False: If an error occurs during the processing of one of the write operations, MongoDB will continue to process remaining write operations in the queue.
             '''
             try:
-                self.collection.insert_many([{'url':u, 'timestamp':time.time(), 'status':'to_crawl'} for u in url], ordered=False)
+                self.collection.insert_many([{'url':u, 'timestamp':time.time(), 'status':'to_crawl?'} for u in url], ordered=False)
             except Exception as ex:
                 pass
                 # print(ex)
         elif type(url) == str:
             try:
                 # Try inserting url
-                self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'to_crawl'})
+                self.collection.insert_one({'url':url, 'timestamp':time.time(), 'status':'to_crawl?'})
                 return True # inserted
             except  Exception as ex:
                 pass
