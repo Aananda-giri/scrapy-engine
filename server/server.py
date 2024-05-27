@@ -180,8 +180,6 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
 # ======================================================
 
 def pop_from_mongo():
-    sqlite_db = URLDatabase(db_path="urls.db")
-    
     crawled_data = list(mongo.db['crawled_data'].find())
     other_data = list(mongo.db['other_data'].find())
     # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
@@ -297,6 +295,7 @@ def consumer():
 
 
 def save_to_csv(data, data_type="crawled_data"):
+    sqlite_db = URLDatabase(db_path="urls.db")
     for data_type, data_items in data.items():
         '''
             data_type: crawled_data, other_data
