@@ -139,20 +139,21 @@ class MasterSlave(scrapy.Spider):
             if (is_np_domain(de_fragmented_url) or is_special_domain_to_crawl(de_fragmented_url)): # and de_fragmented_url not in self.visited_urls:
                 # is_same_domain(response.url, de_fragmented_url) or    # it is a problem because attempting to crawl bbc.com/nepali can lead to bbc.com
                 # only follow urls from same domain or other nepali domain and not visited yet
-                if len(self.crawler.engine.slot.inprogress) >= self.crawler.engine.settings.get('CONCURRENT_REQUESTS'):
-                    # send new urls_to_crawl to redis.
-                    # self.redis_client.sadd('url_to_crawl', json.dumps(de_fragmented_url))
-                    self.mongo.append_url_to_crawl(de_fragmented_url)
-                else:
-                    if self.mongo.append_url_crawling(de_fragmented_url):
-                        # yield url to crawl new urls_to_crawl by itself
-                        yield scrapy.Request(de_fragmented_url, callback=self.parse, errback=self.errback_httpbin)  # dont_filter=True  : allows visiting same url again
+                # if len(self.crawler.engine.slot.inprogress) >= self.crawler.engine.settings.get('CONCURRENT_REQUESTS'):
+                #     # send new urls_to_crawl to redis.
+                #     # self.redis_client.sadd('url_to_crawl', json.dumps(de_fragmented_url))
+                #     # self.mongo.append_url_to_crawl(de_fragmented_url)
+                self.mongo.append_url_to_crawl(de_fragmented_url)
+                # else:
+                #     if self.mongo.append_url_crawling(de_fragmented_url):
+                #         # yield url to crawl new urls_to_crawl by itself
+                #         yield scrapy.Request(de_fragmented_url, callback=self.parse, errback=self.errback_httpbin)  # dont_filter=True  : allows visiting same url again
                     
-                        # self.to_visit.append(de_fragmented_url)
+                #         # self.to_visit.append(de_fragmented_url)
                         
-                        # Send crawling notice to server
-                        # self.redis_client.sadd('url_crawling', json.dumps(de_fragmented_url))
-        
+                #         # Send crawling notice to server
+                #         # self.redis_client.sadd('url_crawling', json.dumps(de_fragmented_url))
+        # append crawled url to visited urls
         self.mongo.append_url_crawled(response.request.url)
         ''' Note:
             If a url redirects to another url, then the original url is added to visited urls so as to not to visit it again.
