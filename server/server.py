@@ -49,12 +49,16 @@ def run_periodically():
     time.sleep(3 * 60 * 60)
 
 # Create and start the thread as a daemon
-thread = threading.Thread(target=run_periodically)
-thread.daemon = True
-thread.start()
+recover_expired_crawling_thread = threading.Thread(target=run_periodically)
+recover_expired_crawling_thread.daemon = True
+recover_expired_crawling_thread.start()
 # ======================================================
 
 def display_stats():
+    '''
+        This is a thread to display the stats of the crawling process every 1 minute
+    '''
+    while True:
         # -----------------------------------------------------------------------
         # --------------------------------- Stats ------------------------------- 
         # -----------------------------------------------------------------------
@@ -91,6 +95,9 @@ def display_stats():
         print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB")
         # -----------------------------------------------------------------------
 
+        # Sleep for 1 minute
+        time.sleep(60)
+
 # ======================================================
 # Save data from redis to csv file
 # ======================================================
@@ -102,10 +109,10 @@ def pop_from_mongo():
     if not crawled_data and not other_data:
         # display_stats()
         # print('========sleeping for 5 sec.....==========')   # No Data
-        time.sleep(5)
-    if time.time()%60 == 0:
-        # display once every minute
-        display_stats()
+        time.sleep(10)
+    # if time.time()%60 == 0:
+    #     # display once every minute
+    #     display_stats()
     combined_data = {"crawled_data":crawled_data, "other_data":other_data}
     
     # Save to .csv file
@@ -257,8 +264,11 @@ def consumer():
 
 consumer_thread = threading.Thread(target=consumer)
 backup_thread = threading.Thread(target=backup_crawled_data)
+display_stats_thread = threading.Thread(target=display_stats)
 
 backup_thread.daemon = True
+display_stats_thread.daemon = True
+display_stats_thread.start()
 backup_thread.start()
 
 consumer_thread.daemon = True   # daemon threads are forcefully shut down when Python exits and programme waits for non-daemon threads to finish their tasks.
@@ -272,7 +282,7 @@ consumer_thread.start()
 # producer_thread.join()
 # publisher_thread.join()
 # consumer_thread.join()    # waits for consumer_thread to finigh
-thread.join()  # Wait for the thread to finish
+recover_expired_crawling_thread.join()  # Wait for the thread to finish
 
 
 

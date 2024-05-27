@@ -9,6 +9,10 @@ while True:
     expected_time_to_crawl = to_crawl_count / crawling_rate
     start_time = time.time()
 ```
+### Calculating overall crawling_rate from begining instead
+while True:
+    crawl
+
 # Scrapy is too slow (0-10 pages per minute):
 Settings:
 ```
