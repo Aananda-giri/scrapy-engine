@@ -36,6 +36,8 @@ except Exception as ex:
 # ======================================================
 
 mongo = Mongo()
+start_time = time.time()
+number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "crawled"})
 
 def run_periodically():
   while True:
@@ -51,7 +53,6 @@ thread = threading.Thread(target=run_periodically)
 thread.daemon = True
 thread.start()
 # ======================================================
-
 
 def display_stats():
         # -----------------------------------------------------------------------
@@ -70,13 +71,24 @@ def display_stats():
         print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
         print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
         
+        # Get mongo stats
         db=mongo.db
-        # Get database stats
         stats = db.command("dbstats")
         # Print the stats
         print("DB Size: ", stats['dataSize']/(1024*1024))
         print("Storage Size: ", stats['storageSize']/(1024*1024))
-        print("Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n\n")
+        print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n\n")
+        
+        # Crawling Rate
+        newly_crawled = crawled_count - number_of_links_crawled_at_start
+        time_taken = time.time() - start_time
+        crawling_rate = newly_crawled / time_taken
+        expected_time_to_crawl = to_crawl_count / crawling_rate
+        print(f"Crawling Rate: {locale.format_string('%d', crawling_rate, grouping=True)} links/sec")
+        print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
+        
+        # Get Crawled File Size
+        print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB")
         # -----------------------------------------------------------------------
 
 # ======================================================
@@ -88,9 +100,12 @@ def pop_from_mongo():
     other_data = list(mongo.db['other_data'].find())
     print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
     if not crawled_data and not other_data:
+        # display_stats()
+        # print('========sleeping for 5 sec.....==========')   # No Data
+        time.sleep(5)
+    if time.time()%60 == 0:
+        # display once every minute
         display_stats()
-        print('========sleeping for 5 sec.....==========')   # No Data
-        time.sleep(10)
     combined_data = {"crawled_data":crawled_data, "other_data":other_data}
     
     # Save to .csv file
@@ -100,9 +115,9 @@ def pop_from_mongo():
     mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
     
-    if len(crawled_data)>0:
-        logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
-        print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
+    # if len(crawled_data)>0:
+    #     logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
+    #     print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
 def backup_crawled_data():
     # ---------------------------------------------------------------------------

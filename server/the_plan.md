@@ -1,3 +1,14 @@
+# Expected time to crawl all to_crawl
+```
+while True:
+    crawl
+    
+    number_of_links_crawled = crawled_count - number_of_links_crawled
+    time_taken = time.time() - start_time
+    crawling_rate = number_of_links_crawled / time_taken
+    expected_time_to_crawl = to_crawl_count / crawling_rate
+    start_time = time.time()
+```
 # Scrapy is too slow (0-10 pages per minute):
 Settings:
 ```
