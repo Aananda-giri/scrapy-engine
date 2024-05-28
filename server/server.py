@@ -103,6 +103,8 @@ def display_stats():
         
         # Get Crawled File Size
         print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB", end="\n-----------------------------------------------\n")
+        print(f"Size of urls.db: {os.path.getsize('urls.db')/(1024*1024) if os.path.exists('urls.db') else 0} MB", end="\n-----------------------------------------------\n")
+
         # -----------------------------------------------------------------------
 
         # Sleep for 1 minute
