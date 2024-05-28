@@ -118,26 +118,27 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         * creating a giant thread to avoid concurrency issues
         * This thread will run once every 1.5 hours
     '''
+    print("mongo_to_crawl_refill started")
+    logging.info("mongo_to_crawl_refill started")
     url_db = URLDatabase(db_path="urls.db")
     while True:    
         # Get all urls from "to_crawl?"
         urls = mongo.collection.find({"status": 'to_crawl?'})
-        to_crawl_urls = [(url['url'], url['timestamp']) for url in list(urls)]
+        to_crawl_urls_from_mongo = [(url['url'], url['timestamp']) for url in list(urls)]
         # to_crawl_urls
-
         # Save to sqlite
         # Insert the data into the database
-        if to_crawl_urls: url_db.bulk_insert("crawled", to_crawl_urls, show_progress=False)
-        
-        # Sleep for 5 minutes
-        time.sleep(5 * 60)
-        
+        if to_crawl_urls_from_mongo:
+            url_db.bulk_insert("crawled", to_crawl_urls_from_mongo, show_progress=False)
+            # delete from mongo
+            urls_to_delete = [url[0] for url in to_crawl_urls_from_mongo]
+            mongo.collection.delete_many({'url': {'$in': urls_to_delete}, 'status': 'to_crawl?'})
         # -----------------------
         # mongo_to_crawl_refill
         # -----------------------
         
         if mongo.collection.count_documents({"status": 'to_crawl'}) < 100000:
-            new_to_crawl_urls = url_db.fetch('to_crawl', 100000)
+            new_to_crawl_urls = url_db.fetch('to_crawl', 10000)
             n_failed_to_upload = 0
             try:
                 # insert many
@@ -147,32 +148,30 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 # Get the details of the operations that failed
                 failed_ops = bwe.details['writeErrors']
                 
-
                 # Get the documents that failed to insert
                 failed_docs = [op['op'] for op in failed_ops]
-
                 # Get the URLs that failed to insert
                 urls_failed_to_upload_to_mongo = [(doc['url'], doc['timestamp']) for doc in failed_docs]
                 n_failed_to_upload = len(urls_failed_to_upload_to_mongo)
                 # for url in urls_failed_to_upload_to_mongo:
                 #     logging.error(f"Failed to upload {url} to MongoDB")
                 # success_urls = [url for url in new_to_crawl_urls if url not in urls_failed_to_upload_to_mongo]
-
                 # # Delete successful urls from sqlite
                 # url_db.delete("to_crawl", success_urls)
                 # # print(f'success_urls:{success_urls}, len:{len(success_urls)}')
                 # print(failed_urls, len(failed_urls))
             # # delete from sqlite
-            if n_failed_to_upload < 10000:
+            if n_failed_to_upload < 9900:
                 url_db.delete("to_crawl", new_to_crawl_urls)
                 # print(n_failed_to_upload)
             else:
                 print(f'failed to upload {n_failed_to_upload} urls to mongo')
                 # exit the python script
                 sys.exit(1)
-        
-        # Sleep for 1.5 hours
-        time.sleep(1 * 60 * 60)
+        print("inserted 10,000 urls to mongodb")
+        logging.info("inserted 100,000 urls to mongodb")
+        # Sleep for 5 minutes
+        time.sleep(5 * 60)
 
 
 # ======================================================
