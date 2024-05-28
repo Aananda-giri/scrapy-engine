@@ -71,26 +71,34 @@ def display_stats():
         # there is no data
         # length of to_crawl
         to_crawl_count = mongo.collection.count_documents({"status": "to_crawl"})
+        to_crawl_spider_count = mongo.collection.count_documents({"status": 'to_crawl?'})
         crawling_count = mongo.collection.count_documents({"status": "crawling"})
         crawled_count = mongo.collection.count_documents({"status": "crawled"})
-        
+        to_crawl_sqlite_count = URLDatabase(db_path="urls.db").count_entries("to_crawl")
+        crawled_sqlite_count = URLDatabase(db_path="urls.db").count_entries("crawled")
+
         # Nice formatted view for to_crawl, crawled and crawling
         # Formatted output
         print("=================================================")
         print("\n #  *********** Crawl Queue Status ***********")
         print("=================================================")
         print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
-        print(f"To Crawl: {locale.format_string('%d', to_crawl_count, grouping=True)}")
-        print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
-        print(f"Crawling: {locale.format_string('%d', crawling_count, grouping=True)}")
+        print(f"\"to_crawl\" (Mongo): {locale.format_string('%d', to_crawl_count, grouping=True)}")
+        print(f"\"to_crawl?\" (Mongo by Spider): {locale.format_string('%d', to_crawl_spider_count, grouping=True)}")
+        print(f"Crawling (Mongo): {locale.format_string('%d', crawling_count, grouping=True)}")
+        print(f"\"to_crawl\" (Sqlite): {locale.format_string('%d', to_crawl_sqlite_count, grouping=True)}")
+        print(f"\"crawled\" (Sqlite): {locale.format_string('%d', crawled_sqlite_count, grouping=True)}")
+        # print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
+        
+
         
         # Get mongo stats
         db=mongo.db
         stats = db.command("dbstats")
         # Print the stats
-        print("DB Size: ", stats['dataSize']/(1024*1024))
-        print("Storage Size: ", stats['storageSize']/(1024*1024))
-        print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n-----------------------------------------------\n")
+        # print("DB Size: ", stats['dataSize']/(1024*1024))
+        # print("Storage Size: ", stats['storageSize']/(1024*1024))
+        # print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n-----------------------------------------------\n")
         
         # Crawling Rate
         newly_crawled = crawled_count - number_of_links_crawled_at_start
@@ -102,13 +110,15 @@ def display_stats():
         print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
         
         # Get Crawled File Size
-        print(f"Size of crawled_data.csv: {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB", end="\n-----------------------------------------------\n")
-        print(f"Size of urls.db: {os.path.getsize('urls.db')/(1024*1024) if os.path.exists('urls.db') else 0} MB", end="\n-----------------------------------------------\n")
+        print(f"Size \"crawled_data.csv\": {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB")
+        print(f"Size of \"other_data.csv\": {os.path.getsize('other_data.csv')/(1024*1024) if os.path.exists('other_data.csv') else 0} MB")
+        print(f"Size of urls.db: {os.path.getsize('urls.db')/(1024*1024) if os.path.exists('urls.db') else 0} MB")
+        print("===============================================\n\n\n")
 
         # -----------------------------------------------------------------------
 
-        # Sleep for 1 minute
-        time.sleep(60)
+        # Sleep for 3 minute
+        time.sleep(60*3)
 
 
 # =========================================================
