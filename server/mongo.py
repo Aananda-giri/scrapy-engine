@@ -119,7 +119,7 @@ class Mongo():
             # {"$count": "count"}
         ]
         # The result is a list of documents returned by the aggregation pipeline
-        expired_crawling_urls = list(mongo.collection.aggregate(pipeline))
+        expired_crawling_urls = list(self.collection.aggregate(pipeline))
         convert_from_crawling_to_to_crawl(expired_crawling_urls)
 
     
