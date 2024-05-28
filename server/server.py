@@ -107,7 +107,7 @@ def display_stats():
         # print(f"Crawling Rate: {locale.format_string('%d', crawling_rate, grouping=True)} links/sec")
         # expected_time_to_crawl = to_crawl_count / (crawling_rate if crawling_rate > 0 else 0.0000001)
         # print(f"Crawling Rate: {crawling_rate} links/sec")
-        print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
+        # print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
         
         # Get Crawled File Size
         print(f"Size \"crawled_data.csv\": {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB")
