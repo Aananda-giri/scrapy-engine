@@ -74,8 +74,8 @@ def display_stats():
         to_crawl_spider_count = mongo.collection.count_documents({"status": 'to_crawl?'})
         crawling_count = mongo.collection.count_documents({"status": "crawling"})
         crawled_count = mongo.collection.count_documents({"status": "crawled"})
-        to_crawl_sqlite_count = URLDatabase(db_path="urls.db").count_entries("to_crawl")
-        crawled_sqlite_count = URLDatabase(db_path="urls.db").count_entries("crawled")
+        # to_crawl_sqlite_count = URLDatabase(db_path="urls.db").count_entries("to_crawl")
+        # crawled_sqlite_count = URLDatabase(db_path="urls.db").count_entries("crawled")
 
         # Nice formatted view for to_crawl, crawled and crawling
         # Formatted output
@@ -86,8 +86,8 @@ def display_stats():
         print(f"\"to_crawl\" (Mongo): {locale.format_string('%d', to_crawl_count, grouping=True)}")
         print(f"\"to_crawl?\" (Mongo by Spider): {locale.format_string('%d', to_crawl_spider_count, grouping=True)}")
         print(f"Crawling (Mongo): {locale.format_string('%d', crawling_count, grouping=True)}")
-        print(f"\"to_crawl\" (Sqlite): {locale.format_string('%d', to_crawl_sqlite_count, grouping=True)}")
-        print(f"\"crawled\" (Sqlite): {locale.format_string('%d', crawled_sqlite_count, grouping=True)}")
+        # print(f"\"to_crawl\" (Sqlite): {locale.format_string('%d', to_crawl_sqlite_count, grouping=True)}")
+        # print(f"\"crawled\" (Sqlite): {locale.format_string('%d', crawled_sqlite_count, grouping=True)}")
         # print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
         
 
