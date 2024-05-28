@@ -76,6 +76,7 @@ def display_stats():
         crawled_count = mongo.collection.count_documents({"status": "crawled"})
         crawled_data_count = mongo.db['crawled_data'].count_documents({})
         other_data_count = mongo.db['other_data'].count_documents({})
+        error_url_count = mongo.collection.count_documents({"status": "error"})
         # to_crawl_sqlite_count = URLDatabase(db_path="urls.db").count_entries("to_crawl")
         # crawled_sqlite_count = URLDatabase(db_path="urls.db").count_entries("crawled")
 
@@ -87,6 +88,7 @@ def display_stats():
         print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
         print(f"\"to_crawl\" (Mongo): {locale.format_string('%d', to_crawl_count, grouping=True)}")
         print(f"\"to_crawl?\" (Mongo by Spider): {locale.format_string('%d', to_crawl_spider_count, grouping=True)}")
+        print(f"Error (Mongo): {locale.format_string('%d', error_url_count, grouping=True)}")
         print(f"Crawling (Mongo): {locale.format_string('%d', crawling_count, grouping=True)}")
         print(f"Crawled_data (Mongo): {locale.format_string('%d', crawled_data_count, grouping=True)}")
         print(f"Other_data (Mongo): {locale.format_string('%d', other_data_count, grouping=True)}")
@@ -162,7 +164,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         # ------------------------------------------------------------------------------------------------------------------------
         # mongo_to_crawl_refill
         # -----------------------
-        if mongo.collection.count_documents({"status": 'to_crawl'}) < 100000:
+        if mongo.collection.count_documents({"status": 'to_crawl'}) < 60000:
             new_to_crawl_urls = url_db.fetch('to_crawl', 10000)
             n_failed_to_upload = 0
             try:
@@ -218,11 +220,11 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 print(f"creating csv file: {csv_file_path}")
                 # Write header only if file is empty
                 csv_writer.writeheader()
-            else:
-                print(f'csv file: \"{csv_file_path}\" exists')
+            # else:
+            #     print(f'csv file: \"{csv_file_path}\" exists')
             csv_writer.writerows(formatted_for_csv)
 
-        print(f'Saved error_data to {csv_file_path}')
+        print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}")
 
         # Delete from mongo
         mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
