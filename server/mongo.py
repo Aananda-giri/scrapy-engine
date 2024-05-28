@@ -28,7 +28,12 @@ class Mongo():
         except  Exception as ex:
             # url exists: change status to 'crawled'
             self.collection.update_one({'url':url}, {'$set': {'status':'crawled'}})
-        
+    def delete_to_crawl(self, url):
+        try:
+            self.collection.delete_one({'url':url, 'status':'to_crawl'})
+        except Exception as ex:
+            pass
+            print(ex)
     def append_url_crawling(self, url):
         try:
             # Try inserting url

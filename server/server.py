@@ -47,12 +47,12 @@ number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "
 
 def run_periodically():
   while True:
-    # Convert urls from crawling to to_crawl if they are in crawling state for more than 20 minutes
-    mongo.recover_expired_crawling(created_before=1200)
+    # Convert urls from crawling to to_crawl if they are in crawling state for more than 5 minutes
+    mongo.recover_expired_crawling(created_before=300)
     
     
-    # Sleep for 30 minutes (converted to seconds)
-    time.sleep(0.5 * 60 * 60)
+    # Sleep for 5 minutes (converted to seconds)
+    time.sleep(5 * 60)
 
 # Create and start the thread as a daemon
 recover_expired_crawling_thread = threading.Thread(target=run_periodically)
