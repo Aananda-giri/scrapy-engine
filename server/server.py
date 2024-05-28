@@ -47,11 +47,11 @@ number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "
 
 def run_periodically():
   while True:
-    # Convert urls from crawling to to_crawl if they are in crawling state for more than 2 hours
-    mongo.recover_expired_crawling(created_before=7200)
+    # Convert urls from crawling to to_crawl if they are in crawling state for more than 1 hours
+    mongo.recover_expired_crawling(created_before=3600)
     
     
-    # Sleep for 3 hour (converted to seconds)
+    # Sleep for 1 hour (converted to seconds)
     time.sleep(1 * 60 * 60)
 
 # Create and start the thread as a daemon
@@ -83,7 +83,7 @@ def display_stats():
         # Nice formatted view for to_crawl, crawled and crawling
         # Formatted output
         print("=================================================")
-        print("\n #  *********** Crawl Queue Status ***********")
+        print("#  *********** Crawl Queue Status ***********")
         print("=================================================")
         print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
         print(f"\"to_crawl\" (Mongo): {locale.format_string('%d', to_crawl_count, grouping=True)}")
@@ -118,7 +118,7 @@ def display_stats():
         print(f"Size \"crawled_data.csv\": {os.path.getsize('crawled_data.csv')/(1024*1024) if os.path.exists('crawled_data.csv') else 0} MB")
         print(f"Size of \"other_data.csv\": {os.path.getsize('other_data.csv')/(1024*1024) if os.path.exists('other_data.csv') else 0} MB")
         print(f"Size of urls.db: {os.path.getsize('urls.db')/(1024*1024) if os.path.exists('urls.db') else 0} MB")
-        print("===============================================\n\n\n")
+        print("===============================================")
 
         # -----------------------------------------------------------------------
 
@@ -224,7 +224,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
             #     print(f'csv file: \"{csv_file_path}\" exists')
             csv_writer.writerows(formatted_for_csv)
 
-        print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}")
+        print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}", end="\n\n")
 
         # Delete from mongo
         mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
