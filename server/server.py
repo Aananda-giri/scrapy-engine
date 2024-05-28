@@ -48,11 +48,11 @@ number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "
 def run_periodically():
   while True:
     # Convert urls from crawling to to_crawl if they are in crawling state for more than 5 minutes
-    mongo.recover_expired_crawling(created_before=300)
+    mongo.recover_expired_crawling(created_before=10*60)
     
     
     # Sleep for 5 minutes (converted to seconds)
-    time.sleep(5 * 60)
+    time.sleep(10 * 60)
 
 # Create and start the thread as a daemon
 recover_expired_crawling_thread = threading.Thread(target=run_periodically)
@@ -164,7 +164,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         # ------------------------------------------------------------------------------------------------------------------------
         # mongo_to_crawl_refill
         # -----------------------
-        if mongo.collection.count_documents({"status": 'to_crawl'}) < 60000:
+        if mongo.collection.count_documents({"status": 'to_crawl'}) < 50000:
             new_to_crawl_urls = url_db.fetch('to_crawl', 10000)
             n_failed_to_upload = 0
             try:
