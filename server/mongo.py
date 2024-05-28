@@ -98,18 +98,18 @@ class Mongo():
             return   # error data exists
 
     def recover_expired_crawling(self, created_before=7200):
-        def convert_from_crawling_to_to_crawl(urls):
-            # for url in urls:
-            #     self.collection.update_one(
-            #         {'_id':url['_id'], 'status': {'$in': ['crawling']}},
-            #         {'$set': {'status':'to_crawl'}}
-            #         )
-            # perform bulk update
-            if urls:
-                self.collection.update_many(
-                    {'_id': {'$in': [url['_id'] for url in urls]}},
-                    {'$set': {'status':'to_crawl'}}
-                )
+        # def convert_from_crawling_to_to_crawl(urls):
+        #     # for url in urls:
+        #     #     self.collection.update_one(
+        #     #         {'_id':url['_id'], 'status': {'$in': ['crawling']}},
+        #     #         {'$set': {'status':'to_crawl'}}
+        #     #         )
+        #     # perform bulk update
+        #     if urls:
+        #         self.collection.update_many(
+        #             {'_id': {'$in': [url['_id'] for url in urls]}},
+        #             {'$set': {'status':'to_crawl'}}
+        #         )
 
         # get items with status 'crawling' and before timestamp 2 hours (7200)
         timestamp = time.time() - created_before  # 2 hours ago
@@ -120,7 +120,8 @@ class Mongo():
         ]
         # The result is a list of documents returned by the aggregation pipeline
         expired_crawling_urls = list(self.collection.aggregate(pipeline))
-        convert_from_crawling_to_to_crawl(expired_crawling_urls)
+        return expired_crawling_urls
+        # convert_from_crawling_to_to_crawl(expired_crawling_urls)
 
     
     def fetch_start_urls(self, number_of_urls_required=10):

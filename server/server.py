@@ -47,11 +47,28 @@ number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "
 
 def run_periodically():
   while True:
-    # Convert urls from crawling to to_crawl if they are in crawling state for more than 5 minutes
-    mongo.recover_expired_crawling(created_before=10*60)
+    # Revoke if a url is crawling for more than 10 minutes
+    expired_crawling_urls = mongo.recover_expired_crawling(created_before=10*60)
+
+    # Save to sqlite
+    # Save to sqlite
+    another_sqlite_instance = URLDatabase(db_path="urls.db")
+    not_already_crawled = []
+    for entry in expired_crawling_urls:
+        if not another_sqlite_instance.exists("crawled", entry['url']):
+            not_already_crawled.append(entry)
     
+    # Save to sqlite
+    # entries = ['url': url['url'], 'timestamp': url['timestamp']} for url in not_already_crawled]
+    entries = [(url['url'], url['timestamp']) for url in not_already_crawled]
+    if entries:
+        another_sqlite_instance.bulk_insert("to_crawl", entries, show_progress=False)
+    # another_sqlite_instance.close()
+
+    # Delete from mongo
+    mongo.collection.delete_many({'status': 'crawling', 'url': {'$in': [entry['url'] for entry in not_already_crawled]}})
     
-    # Sleep for 5 minutes (converted to seconds)
+    # Sleep for 10 minutes (converted to seconds)
     time.sleep(10 * 60)
 
 # Create and start the thread as a daemon
