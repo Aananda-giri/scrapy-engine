@@ -74,6 +74,8 @@ def display_stats():
         to_crawl_spider_count = mongo.collection.count_documents({"status": 'to_crawl?'})
         crawling_count = mongo.collection.count_documents({"status": "crawling"})
         crawled_count = mongo.collection.count_documents({"status": "crawled"})
+        crawled_data_count = mongo.db['crawled_data'].count_documents({})
+        other_data_count = mongo.db['other_data'].count_documents({})
         # to_crawl_sqlite_count = URLDatabase(db_path="urls.db").count_entries("to_crawl")
         # crawled_sqlite_count = URLDatabase(db_path="urls.db").count_entries("crawled")
 
@@ -86,6 +88,8 @@ def display_stats():
         print(f"\"to_crawl\" (Mongo): {locale.format_string('%d', to_crawl_count, grouping=True)}")
         print(f"\"to_crawl?\" (Mongo by Spider): {locale.format_string('%d', to_crawl_spider_count, grouping=True)}")
         print(f"Crawling (Mongo): {locale.format_string('%d', crawling_count, grouping=True)}")
+        print(f"Crawled_data (Mongo): {locale.format_string('%d', crawled_data_count, grouping=True)}")
+        print(f"Other_data (Mongo): {locale.format_string('%d', other_data_count, grouping=True)}")
         # print(f"\"to_crawl\" (Sqlite): {locale.format_string('%d', to_crawl_sqlite_count, grouping=True)}")
         # print(f"\"crawled\" (Sqlite): {locale.format_string('%d', crawled_sqlite_count, grouping=True)}")
         # print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
@@ -130,6 +134,9 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         * creating a giant thread to avoid concurrency issues
         * This thread will run once every 1.5 hours
     '''
+    # ------------------------------------------------------------------------------------------------
+    # mograte "to_crawl?" from mongo -> sqlite
+    # -----------------------------------------
     print("mongo_to_crawl_refill started")
     logging.info("mongo_to_crawl_refill started")
     url_db = URLDatabase(db_path="urls.db")
@@ -145,10 +152,9 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
             # delete from mongo
             urls_to_delete = [url[0] for url in to_crawl_urls_from_mongo]
             mongo.collection.delete_many({'url': {'$in': urls_to_delete}, 'status': 'to_crawl?'})
-        # -----------------------
+        # ------------------------------------------------------------------------------------------------------------------------
         # mongo_to_crawl_refill
         # -----------------------
-        
         if mongo.collection.count_documents({"status": 'to_crawl'}) < 100000:
             new_to_crawl_urls = url_db.fetch('to_crawl', 10000)
             n_failed_to_upload = 0
@@ -173,7 +179,8 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 # # print(f'success_urls:{success_urls}, len:{len(success_urls)}')
                 # print(failed_urls, len(failed_urls))
             finally:
-                n_failed_to_upload = n_failed_to_upload if 'n_failed_to_upload' in locals() else 0
+                n_failed_to_upload = n_failed_to_upload if 'n_failed_to_upload' in locals() and isinstance(n_failed_to_upload, int) else 0
+            n_failed_to_upload = n_failed_to_upload if 'n_failed_to_upload' in locals() and isinstance(n_failed_to_upload, int) else 0
             # # delete from sqlite
             # if n_failed_to_upload < 9900:
             url_db.delete("to_crawl", new_to_crawl_urls)
@@ -182,9 +189,38 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
             #     print(f'failed to upload {n_failed_to_upload} urls to mongo')
             #     # exit the python script
             #     # sys.exit(1)
-        print(f"inserted {10000-n_failed_to_upload} urls to mongodb")
-        logging.info(f"inserted {10000- n_failed_to_upload if n_failed_to_upload else 0} urls to mongodb")
-        # Sleep for 5 minutes
+        print(f"attempted inserting {10000} urls to mongodb")
+        logging.info(f"attempted inserting {10000} urls to mongodb")
+        # ------------------------------------------------------------------------------------------------------------------------
+        # Save error data to csv
+        # -----------------------
+        error_data = mongo.collection.find({'status': 'error'}) # .limit(10)
+        formatted_for_csv = [{
+                'url': error['url'],
+                'timestamp': error['timestamp'],
+                'status': error['status'],
+                'status_code': error['status_code'] if 'status_code' in error else None,
+                'error_type': error['error_type']
+            } for error in error_data]
+        # Append error data to csv
+        csv_file_path = 'error_data.csv'
+        file_exists = os.path.exists(csv_file_path)
+        with open(csv_file_path, 'a') as csvfile:
+            fieldnames = ['url', 'timestamp', 'status', 'status_code', 'error_type']
+            csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                print(f"creating csv file: {csv_file_path}")
+                # Write header only if file is empty
+                csv_writer.writeheader()
+            else:
+                print(f'csv file: \"{csv_file_path}\" exists')
+            csv_writer.writerows(formatted_for_csv)
+
+        print(f'Saved error_data to {csv_file_path}')
+
+        # Delete from mongo
+        mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
+        # ------------------------------------------------------------------------------------------------------------------------
         time.sleep(5 * 60)
 
 
@@ -342,6 +378,9 @@ def save_to_csv(data, data_type="crawled_data"):
                                 # insert the url to crawled
                                 sqlite_db.insert("crawled", data_item['parent_url'])
                             sqlite_db.close()
+                    else:
+                        # Save other data
+                        csv_writer.writerows(data_items)
 
                 except Exception as ex:
                     print(ex)

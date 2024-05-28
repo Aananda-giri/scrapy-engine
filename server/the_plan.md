@@ -1,3 +1,4 @@
+[ ] problem: sqlite says: "Database is locked" what does it mean? are new values not being inserted?
 [ ] update display_stats function to accomodate sqlite
 # problem: No mechanism to handle duplicate data to csv
 [ ] check duplciacy before inserting to csv

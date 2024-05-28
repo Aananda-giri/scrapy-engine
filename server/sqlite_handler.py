@@ -3,7 +3,7 @@ from datetime import datetime
 
 class URLDatabase:
     def __init__(self, db_path='urls.db'):
-        self.conn = sqlite3.connect(db_path)
+        self.conn = sqlite3.connect(db_path, timeout=100)
         self.cursor = self.conn.cursor()
         self._create_tables()
 
