@@ -52,7 +52,7 @@ def run_periodically():
     
     
     # Sleep for 3 hour (converted to seconds)
-    time.sleep(3 * 60 * 60)
+    time.sleep(1 * 60 * 60)
 
 # Create and start the thread as a daemon
 recover_expired_crawling_thread = threading.Thread(target=run_periodically)
