@@ -101,12 +101,12 @@ def display_stats():
         # print("Mongo Free Storage Space: ", stats['totalFreeStorageSize']/(1024*1024), end="\n-----------------------------------------------\n")
         
         # Crawling Rate
-        newly_crawled = crawled_count - number_of_links_crawled_at_start
-        time_taken = time.time() - start_time
-        crawling_rate = newly_crawled / time_taken
+        # newly_crawled = crawled_count - number_of_links_crawled_at_start
+        # time_taken = time.time() - start_time
+        # crawling_rate = newly_crawled / time_taken
         # print(f"Crawling Rate: {locale.format_string('%d', crawling_rate, grouping=True)} links/sec")
-        expected_time_to_crawl = to_crawl_count / (crawling_rate if crawling_rate > 0 else 0.0000001)
-        print(f"Crawling Rate: {crawling_rate} links/sec")
+        # expected_time_to_crawl = to_crawl_count / (crawling_rate if crawling_rate > 0 else 0.0000001)
+        # print(f"Crawling Rate: {crawling_rate} links/sec")
         print(f"Expected Time to Crawl: {locale.format_string('%d', expected_time_to_crawl/(60*60*24), grouping=True)} days")
         
         # Get Crawled File Size
