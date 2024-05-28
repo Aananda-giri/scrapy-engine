@@ -3,3 +3,6 @@ scrapy_engine/spiders/sec_spider.py
 scrapy_engine/spiders/docs_spider.py
 scrapy_v2/.env
 scrapy_engine/spiders/.env
+server/crawled_data.csv
+server/other_data.csv
+server/urls.db
