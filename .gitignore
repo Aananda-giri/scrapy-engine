@@ -6,3 +6,5 @@ scrapy_engine/spiders/.env
 server/crawled_data.csv
 server/other_data.csv
 server/urls.db
+server/__pycache__/*
+scrapy_engine/__pycache__/*
