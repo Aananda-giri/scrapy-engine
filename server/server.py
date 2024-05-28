@@ -97,8 +97,7 @@ def display_stats():
 
         
         # Get mongo stats
-        db=mongo.db
-        stats = db.command("dbstats")
+        # stats = mongo.db.command("dbstats")
         # Print the stats
         # print("DB Size: ", stats['dataSize']/(1024*1024))
         # print("Storage Size: ", stats['storageSize']/(1024*1024))
@@ -143,15 +142,23 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
     while True:    
         # Get all urls from "to_crawl?"
         urls = mongo.collection.find({"status": 'to_crawl?'})
-        to_crawl_urls_from_mongo = [(url['url'], url['timestamp']) for url in list(urls)]
+        to_crawl_uncertain = [(url['url'], url['timestamp']) for url in list(urls)]
+        to_crawl_for_certain = []
+        for entry in to_crawl_uncertain:
+            if not url_db.exists("crawled", entry[0]):
+                to_crawl_for_certain.append(entry)
+
         # to_crawl_urls
         # Save to sqlite
         # Insert the data into the database
-        if to_crawl_urls_from_mongo:
-            url_db.bulk_insert("crawled", to_crawl_urls_from_mongo, show_progress=False)
-            # delete from mongo
-            urls_to_delete = [url[0] for url in to_crawl_urls_from_mongo]
-            mongo.collection.delete_many({'url': {'$in': urls_to_delete}, 'status': 'to_crawl?'})
+        if to_crawl_for_certain:
+            url_db.bulk_insert("to_crawl", to_crawl_for_certain, show_progress=False)
+            # delete all fetched urls from mongo
+            to_delete_from_mongo = [url[0] for url in to_crawl_uncertain]
+            
+            mongo.collection.delete_many({'url': {'$in': to_delete_from_mongo}, 'status': 'to_crawl?'})
+            print(f"migrated {len(to_crawl_uncertain)} \"to_crawl?\" from mongo to sqlite")
+            logging.info(f"migrated {len(to_crawl_uncertain)} \"to_crawl?\" from mongo to sqlite")
         # ------------------------------------------------------------------------------------------------------------------------
         # mongo_to_crawl_refill
         # -----------------------
@@ -180,7 +187,6 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 # print(failed_urls, len(failed_urls))
             finally:
                 n_failed_to_upload = n_failed_to_upload if 'n_failed_to_upload' in locals() and isinstance(n_failed_to_upload, int) else 0
-            n_failed_to_upload = n_failed_to_upload if 'n_failed_to_upload' in locals() and isinstance(n_failed_to_upload, int) else 0
             # # delete from sqlite
             # if n_failed_to_upload < 9900:
             url_db.delete("to_crawl", new_to_crawl_urls)
@@ -221,7 +227,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         # Delete from mongo
         mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
         # ------------------------------------------------------------------------------------------------------------------------
-        time.sleep(5 * 60)
+        time.sleep(5 * 60)  # sleep for 5 minutes
 
 
 # ======================================================
