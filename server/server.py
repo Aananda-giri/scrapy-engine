@@ -161,14 +161,14 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 # # print(f'success_urls:{success_urls}, len:{len(success_urls)}')
                 # print(failed_urls, len(failed_urls))
             # # delete from sqlite
-            if n_failed_to_upload < 9900:
-                url_db.delete("to_crawl", new_to_crawl_urls)
-                # print(n_failed_to_upload)
-            else:
-                print(f'failed to upload {n_failed_to_upload} urls to mongo')
-                # exit the python script
-                sys.exit(1)
-        print("inserted 10,000 urls to mongodb")
+            # if n_failed_to_upload < 9900:
+            url_db.delete("to_crawl", new_to_crawl_urls)
+            # print(n_failed_to_upload)
+            # else:
+            #     print(f'failed to upload {n_failed_to_upload} urls to mongo')
+            #     # exit the python script
+            #     # sys.exit(1)
+        print(f"inserted {10000-n_failed_to_upload} urls to mongodb")
         logging.info("inserted 100,000 urls to mongodb")
         # Sleep for 5 minutes
         time.sleep(5 * 60)
