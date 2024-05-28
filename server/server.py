@@ -67,6 +67,8 @@ def run_periodically():
 
     # Delete from mongo
     mongo.collection.delete_many({'status': 'crawling', 'url': {'$in': [entry['url'] for entry in not_already_crawled]}})
+    print(f"recovered {len(not_already_crawled)} expired \"crawling\" urls from mongo -> sqlite")
+    logging.info(f"recovered {len(not_already_crawled)} expired \"crawling\" urls from mongo -> sqlite")
     
     # Sleep for 10 minutes (converted to seconds)
     time.sleep(10 * 60)
