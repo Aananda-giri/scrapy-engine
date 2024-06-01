@@ -45,7 +45,7 @@ except Exception as ex:
 start_time = time.time()
 number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "crawled"})
 
-def run_periodically():
+def revoke_crawling_url():
   while True:
     # Revoke if a url is crawling for more than 10 minutes
     expired_crawling_urls = mongo.recover_expired_crawling(created_before=10*60)
@@ -74,9 +74,9 @@ def run_periodically():
     time.sleep(10 * 60)
 
 # Create and start the thread as a daemon
-recover_expired_crawling_thread = threading.Thread(target=run_periodically)
-recover_expired_crawling_thread.daemon = True
-recover_expired_crawling_thread.start()
+revoke_crawling_url_thread = threading.Thread(target=revoke_crawling_url)
+revoke_crawling_url_thread.daemon = True
+revoke_crawling_url_thread.start()
 # ======================================================
 
 def display_stats():
@@ -255,29 +255,30 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
 # Save data from redis to csv file
 # ======================================================
 
-def pop_from_mongo():
-    crawled_data = list(mongo.db['crawled_data'].find())
-    other_data = list(mongo.db['other_data'].find())
-    # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
-    if not crawled_data and not other_data:
-        # display_stats()
-        # print('========sleeping for 5 sec.....==========')   # No Data
-        time.sleep(10)
-    # if time.time()%60 == 0:
-    #     # display once every minute
-    #     display_stats()
-    combined_data = {"crawled_data":crawled_data, "other_data":other_data}
-    
-    # Save to .csv file
-    save_to_csv(combined_data)
-    
-    # Delete multiple data by id
-    mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
-    mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-    
-    # if len(crawled_data)>0:
-    #     logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
-    #     print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
+def crawled_data_consumer():
+    while True:
+        crawled_data = list(mongo.db['crawled_data'].find())
+        other_data = list(mongo.db['other_data'].find())
+        # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
+        if not crawled_data and not other_data:
+            # display_stats()
+            # print('========sleeping for 5 sec.....==========')   # No Data
+            time.sleep(10)
+        # if time.time()%60 == 0:
+        #     # display once every minute
+        #     display_stats()
+        combined_data = {"crawled_data":crawled_data, "other_data":other_data}
+        
+        # Save to .csv file
+        save_to_csv(combined_data)
+        
+        # Delete multiple data by id
+        mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
+        mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+        
+        # if len(crawled_data)>0:
+        #     logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
+        #     print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
 def backup_crawled_data():
     # ---------------------------------------------------------------------------
@@ -395,49 +396,39 @@ def save_to_csv(data, data_type="crawled_data"):
                     # # Append the new data
                     # csv_writer.writerows(data_items)
                     if data_type == 'crawled_data':
-                        for data_item in data_items:
-                            csv_writer.writerow(data_item)
-                            
-                            sqlite_db = URLDatabase(db_path="urls.db")
-                            if sqlite_db.exists("to_crawl",  data_item['parent_url']):
-                                # delete the url from to_crawl
-                                sqlite_db.delete("to_crawl", data_item['parent_url'])
-                                # insert the url to crawled
-                                sqlite_db.insert("crawled", data_item['parent_url'])
-                            sqlite_db.close()
-                    else:
-                        # Save other data
-                        csv_writer.writerows(data_items)
+                        sqlite_db = URLDatabase(db_path="urls.db")
+                        urls_data_to_insert = []
+                        # csv_writer.writerow(data_item)
+
+                        # no need to check  if the url exists in to_crawl
+                        # if sqlite_db.exists("to_crawl",  data_item['parent_url']):
+                        urls_data_to_insert = [(data_item['parent_url'], time.time()) for data_item in data_items]
+                        
+                        # delete the url from to_crawl
+                        sqlite_db.delete("to_crawl", urls_data_to_insert)
+                        
+                        '''
+                        * data_item['parent_url'] is data in format:
+                            url <str>
+                        
+                        * For sqlite, we need data in format:
+                        {
+                            'url': url,
+                            'timestamp': timestamp
+                        }
+                        '''
+                        # insert the url to crawled
+                        sqlite_db.bulk_insert("crawled", urls_data_to_insert, show_progress=False)
+                        sqlite_db.close()
+                    
+                    # Save crawled data to csv file
+                    csv_writer.writerows(data_items)
 
                 except Exception as ex:
                     print(ex)
                     # log the error
                     logging.exception(f'data_type:{data_type} exceptionL {ex}')
 
-def consumer():
-    print('consumer')
-    pulled = 0
-    while True:
-        # well formatted date time
-        # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
-        pop_from_mongo()
-
-
-        
-            
-
-        '''
-        # Old code using Redis
-        paragraphs = pop_from_redis()
-        if paragraphs:
-            save_to_csv(paragraphs)
-            pulled += len(paragraphs)
-            print(f'======consumed: {len(paragraphs)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
-            # print(f'len(paragraphs): {len(paragraphs)} \n\n paragraphs:{paragraphs}')
-        else:
-            print('========sleeping for 5 sec.==========')   # No Data
-            time.sleep(5)  # sleep for a while before consuming more items
-        '''
 
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread.daemon = True
@@ -451,9 +442,9 @@ backup_thread = threading.Thread(target=backup_crawled_data)
 backup_thread.daemon = True
 backup_thread.start()
 
-consumer_thread = threading.Thread(target=consumer)
-consumer_thread.daemon = True   # daemon threads are forcefully shut down when Python exits and programme waits for non-daemon threads to finish their tasks.
-consumer_thread.start()
+crawled_data_consumer_thread = threading.Thread(target=crawled_data_consumer)
+crawled_data_consumer_thread.daemon = True   # daemon threads are forcefully shut down when Python exits and programme waits for non-daemon threads to finish their tasks.
+crawled_data_consumer_thread.start()
 
 # Start the thread
 # producer_thread.start()
@@ -463,7 +454,7 @@ consumer_thread.start()
 # producer_thread.join()
 # publisher_thread.join()
 # consumer_thread.join()    # waits for consumer_thread to finigh
-recover_expired_crawling_thread.join()  # Wait for the thread to finish
+revoke_crawling_url_thread.join()  # Wait for the thread to finish
 
 
 
