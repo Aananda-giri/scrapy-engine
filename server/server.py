@@ -515,7 +515,7 @@ def crawled_data_consumer():
         crawled_count = mongo.db['crawled_data'].count_documents({})
         if crawled_count > 0:
             no_iterations = int(crawled_count/10000) + 1
-            for _ in no_iterations:
+            for _ in range(no_iterations):
                 crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
                 other_data = list(mongo.db['other_data'].find({}).limit(10000))
                 # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
