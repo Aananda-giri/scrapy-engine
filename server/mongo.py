@@ -1,6 +1,6 @@
 import os
 import time
-from pymongo.serqver_api import ServerApi
+from pymongo.server_api import ServerApi
 
 from dotenv import load_dotenv
 load_dotenv()
