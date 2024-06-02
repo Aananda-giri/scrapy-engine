@@ -413,7 +413,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                     mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
         # ------------------------------------------------------------------------------------------------------------------------
         print('to_crawl_cleanup_and_mongo_to_crawl_refill: sleeping 1 minute')
-        time.sleep(1 * 60)  # sleep for 1 minute
+        time.sleep(10)  # sleep for 10 seconds
 
 
 
