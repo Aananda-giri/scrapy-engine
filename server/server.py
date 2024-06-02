@@ -7,11 +7,9 @@ import redis
 import shutil
 import threading
 
-
-from sqlite_handler import URLDatabase
-
 from mongo import Mongo
 mongo = Mongo()
+local_mongo = Mongo(local=True)
 
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -42,36 +40,78 @@ except Exception as ex:
 # ======================================================
 
 
-start_time = time.time()
-number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "crawled"})
+# start_time = time.time()
+# number_of_links_crawled_at_start = mongo.collection.count_documents({"status": "crawled"})
+
 
 def revoke_crawling_url():
-  while True:
-    # Revoke if a url is crawling for more than 10 minutes
-    expired_crawling_urls = mongo.recover_expired_crawling(created_before=10*60)
-
-    # Save to sqlite
-    # Save to sqlite
-    another_sqlite_instance = URLDatabase(db_path="urls.db")
-    not_already_crawled = []
-    for entry in expired_crawling_urls:
-        if not another_sqlite_instance.exists("crawled", entry['url']):
-            not_already_crawled.append(entry)
+    '''
+    * Get crawling urls from mongo
+    * if they are not in crawled in local_mongo:
+        * update status in local_mongo, status=tocrawl
+        * delete them from mongo
     
-    # Save to sqlite
-    # entries = ['url': url['url'], 'timestamp': url['timestamp']} for url in not_already_crawled]
-    entries = [(url['url'], url['timestamp']) for url in not_already_crawled]
-    if entries:
-        another_sqlite_instance.bulk_insert("to_crawl", entries, show_progress=False)
-    # another_sqlite_instance.close()
-
+    local_mongo
+        `collection.update_many({"url": {"$in": urls}, "status": "crawling"}, {"$set": {"status": "to_crawl"}}, upsert=True)`
+        status:crawling <change it to to_crawl>
+        status:crawled <leave as it is>
+        status:to_crawl <leave as it is>
+    
+    # Tests:
+    import time
+    from mongo import Mongo
+    local_mongo = Mongo(local=True)
+    local_mongo.collection.insert_many([{'url': 'url_crawling', 'status': 'crawling', 'timestamp': time.time()}, {'url': 'url_crawled', 'status': 'crawled', 'timestamp': time.time()}, {'url': 'url_to_crawl', 'status': 'to_crawl', 'timestamp': time.time()}])
+    
+    # get all urls
+    local_mongo.collection.find({})
+    
+    urls = ['url_crawling', 'url_crawled', 'url_to_crawl', 'new_url']
+    local_mongo.collection.update_many({"url": {"$in": urls}, "status": "crawling"}, {"$set": {"status": "to_crawl"}})
+    # it should perform following operations:
+        * status:crawling <change it to to_crawl>
+        
+        * insert new_url with status:to_crawl
+        * update_many does not support upert=True, insert is not necessary since 
+    
+    # Get all urls
+    list(local_mongo.collection.find({}))
+    
     # Delete from mongo
-    mongo.collection.delete_many({'status': 'crawling', 'url': {'$in': [entry['url'] for entry in not_already_crawled]}})
-    print(f"recovered {len(not_already_crawled)} expired \"crawling\" urls from mongo -> sqlite")
-    logging.info(f"recovered {len(not_already_crawled)} expired \"crawling\" urls from mongo -> sqlite")
-    
-    # Sleep for 10 minutes (converted to seconds)
-    time.sleep(10 * 60)
+    local_mongo.collection.delete_many({'url': {'$in': urls}})
+    '''
+    while True:
+        timestamp = time.time() - 5 * 60  # 5 minutes
+        pipeline = [
+            {"$match": {"status": "crawling", "timestamp": {"$lt": str(timestamp)}}},
+            # {"$limit": limit}
+            # {"$count": "count"}
+        ]
+        expired_count = list(mongo.collection.aggregate(pipeline + [{"$count": "count"}]))
+        if expired_count:
+            expired_count = expired_count[0]['count']
+            no_iterations = int(expired_count / 10000) + 1
+            for _ in no_iterations:
+                expired_crawling_urls = list(mongo.collection.aggregate(pipeline + [{"$limit": 10000}]))
+                
+                # Save to local mongo: by update_many
+                # since url is unique, it would avoid duplicates
+                urls_expired = [entry['url'] for entry in expired_crawling_urls]
+                try:
+                    local_mongo.collection.update_many({"url": {"$in": urls_expired}, "status": "crawling"}, {"$set": {"status": "to_crawl"}})
+                except Exception as ex:
+                    pass
+                
+                # Delete from mongo online
+                try:
+                    mongo.collection.delete_many({'status': 'crawling', 'url': {'$in': urls_expired}})
+                except Exception as ex:
+                    print(ex)
+                print(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
+                logging.info(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
+                
+        # sleep for 5 minutes
+        time.sleep(5 * 60)
 
 # Create and start the thread as a daemon
 revoke_crawling_url_thread = threading.Thread(target=revoke_crawling_url)
@@ -79,11 +119,13 @@ revoke_crawling_url_thread.daemon = True
 revoke_crawling_url_thread.start()
 # ======================================================
 
+
+
 def display_stats():
-    '''
-        This is a thread to display the stats of the crawling process every 1 minute
-    '''
-    while True:
+        '''
+            This is a thread to display the stats of the crawling process every 1 minute
+        '''
+        # while True:
         # -----------------------------------------------------------------------
         # --------------------------------- Stats ------------------------------- 
         # -----------------------------------------------------------------------
@@ -98,7 +140,6 @@ def display_stats():
         error_url_count = mongo.collection.count_documents({"status": "error"})
         # to_crawl_sqlite_count = URLDatabase(db_path="urls.db").count_entries("to_crawl")
         # crawled_sqlite_count = URLDatabase(db_path="urls.db").count_entries("crawled")
-
         # Nice formatted view for to_crawl, crawled and crawling
         # Formatted output
         print("=================================================")
@@ -115,7 +156,6 @@ def display_stats():
         # print(f"\"crawled\" (Sqlite): {locale.format_string('%d', crawled_sqlite_count, grouping=True)}")
         # print(f"Crawled: {locale.format_string('%d', crawled_count, grouping=True)}")
         
-
         
         # Get mongo stats
         # stats = mongo.db.command("dbstats")
@@ -138,147 +178,213 @@ def display_stats():
         print(f"Size of \"other_data.csv\": {os.path.getsize('other_data.csv')/(1024*1024) if os.path.exists('other_data.csv') else 0} MB")
         print(f"Size of urls.db: {os.path.getsize('urls.db')/(1024*1024) if os.path.exists('urls.db') else 0} MB")
         print("===============================================")
-
         # -----------------------------------------------------------------------
 
         # Sleep for 1 minute
         time.sleep(60)
 
 
-# =========================================================
-# sqlite to save crawled and to_crawl urls (mongo is full)
-# =========================================================
+
 
 def to_crawl_cleanup_and_mongo_to_crawl_refill():
     '''
-        * creating a giant thread to avoid concurrency issues
-        * This thread will run once every 1.5 hours
+        * This thread will run once every 1.5 hours? 
+        - lets not allowmake it sleep, the delays from operations should be enouogh
     '''
     # ------------------------------------------------------------------------------------------------
-    # mograte "to_crawl?" from mongo -> sqlite
-    # -----------------------------------------
+    # mograte "to_crawl?" from online mongo -> local_mongo
+    # -----------------------------------------------------
+    '''
+    * Get to_crawl? from online mongo
+    * loop over each url:
+        * insert if url does not exists locally
+        i.e. insert_many with ordered=False should do
+        ```
+            local_mongo.collection.insert_many(
+                [
+                    {
+                        'url': entry['url'],
+                        'status': 'to_crawl',
+                        'timestamp': entry['timestamp']
+                    } 
+                    for entry in entries
+                ],
+                ordered=False)
+        ```
+        
+        ```
+            # Test
+            # pre existing data
+            local_mongo.collection.insert_one({'url': 'existing_url_with_status_crawled', 'status': 'crawled', 'timestamp': time.time()})
+
+            # new data
+            data = [
+                {'url': 'existing_url_with_status_crawled', 'status': 'to_crawl', 'timestamp': time.time()},
+                {'url': 'new_url_with_status_to_crawl', 'status': 'to_crawl', 'timestamp': time.time()}
+            ]
+
+            try:
+                local_mongo.collection.insert_many(data, ordered=False)
+            except Exception as bwe:
+                pass
+
+            # Get all data
+            list(local_mongo.collection.find({}))
+
+            # Delete from local mongo
+            local_mongo.collection.delete_many({'url': {'$in': ['existing_url_with_status_crawled', 'new_url_with_status_to_crawl']}})
+        ```
+    * delete from online mongo
+    '''
     print("mongo_to_crawl_refill started")
     logging.info("mongo_to_crawl_refill started")
-    url_db = URLDatabase(db_path="urls.db")
     while True:    
-        # Get all urls from "to_crawl?"
-        urls = mongo.collection.find({"status": 'to_crawl?'})
-        to_crawl_uncertain = [(url['url'], url['timestamp']) for url in list(urls)]
-        to_crawl_for_certain = []
-        for entry in to_crawl_uncertain:
-            if not url_db.exists("crawled", entry[0]):
-                to_crawl_for_certain.append(entry)
-
-        # to_crawl_urls
-        # Save to sqlite
-        # Insert the data into the database
-        if to_crawl_for_certain:
-            url_db.bulk_insert("to_crawl", to_crawl_for_certain, show_progress=False)
-            # delete all fetched urls from mongo
-            to_delete_from_mongo = [url[0] for url in to_crawl_uncertain]
+        # +1 to avoid 0 division error and int() returns floor value. e.g. 1.9 -> 1
+        n_iterations = int(mongo.collection.count_documents({"status": 'to_crawl?'})/10000) + 1
+        for _ in list(range(n_iterations)):
+            # print(_)
+            # 10000 at a time
             
-            mongo.collection.delete_many({'url': {'$in': to_delete_from_mongo}, 'status': 'to_crawl?'})
-            print(f"migrated {len(to_crawl_uncertain)} \"to_crawl?\" from mongo to sqlite")
-            logging.info(f"migrated {len(to_crawl_uncertain)} \"to_crawl?\" from mongo to sqlite")
+            # Get all urls from "to_crawl?"
+            entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
+            entries = list(entries)
+            # Save to local mongo
+            # print('pre-insert')
+            start_time = time.time()
+            try:
+                _ = local_mongo.collection.insert_many(
+                        [
+                            {
+                                'url': entry['url'],
+                                'status': 'to_crawl',
+                                'timestamp': entry['timestamp']
+                            } 
+                            for entry in entries
+                        ],
+                        ordered=False)
+            except Exception as e:
+                pass
+            # print(f'inserted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
+            # Delete from online mongo
+            start_time = time.time()
+            try:
+                _ = mongo.collection.delete_many(
+                    {
+                        'status': 'to_crawl?',
+                        'url': {'$in': [entry['url'] for entry in entries]}
+                    })
+            except Exception as e:
+                pass
+            # print(f'deleted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
+            # print('deleted')
+            
+    
+    
+        print(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
+        logging.info(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
         # ------------------------------------------------------------------------------------------------------------------------
         # mongo_to_crawl_refill
         # -----------------------
-        if mongo.collection.count_documents({"status": 'to_crawl'}) < 50000:
-            new_to_crawl_urls = url_db.fetch('to_crawl', 10000)
-            n_failed_to_upload = 0
-            try:
-                # insert many
-                mongo.collection.insert_many([{'url': url[0], 'status': 'to_crawl', 'timestamp': url[1]} for url in new_to_crawl_urls], ordered=False)
-            except Exception as bwe:
-                # pass
-                # Get the details of the operations that failed
-                failed_ops = bwe.details['writeErrors']
+        '''
+            * To maintain 50,000 - 60,000 to_crawl urls in online_mongo
+            * Get urls with `status=to_crawl` local_mongo
+            * insert_many to online mongo
+            * update_many `status:crawling` to in local_mongo
+
+            # Test
+            ```
+                # pre existing data
+                local_mongo.collection.insert_one({'url': 'existing_url_with_status_to_crawl', 'status': 'to_crawl', 'timestamp': time.time()})
+                local_mongo.collection.insert_one({'url': 'existing_url_with_status_crawling', 'status': 'crawling', 'timestamp': time.time()})
+                local_mongo.collection.insert_one({'url': 'existing_url_with_status_crawled', 'status': 'crawled', 'timestamp': time.time()})
+
+                # get urls from local_mongo
+                to_crawl_entries = list(local_mongo.collection.find({"status": 'to_crawl'}).limit(10))
+
+                # Insert to online mongo
+
+                # Update status in local_mongo
+                # no need to check status, since we are already filtering with status
+                local_mongo.collection.update_many(
+                    {
+                        'url': {'$in': [entry['url'] for entry in to_crawl_entries]},
+                    }, {'$set': {'status': 'crawling'}})
+
+                # get all data
+                list(local_mongo.collection.find({}))
+                # Delete data
+                local_mongo.collection.delete_many({})
+            ```
+        '''
+        online_to_crawl_count = mongo.collection.count_documents({"status": 'to_crawl'}) < 50000
+        required_to_crawl_count = 50000 - online_to_crawl_count
+        if required_to_crawl_count > 0:
+            # refill 10000 at a time
+            # to avoid max. sized reached error of mongo        
+            no_iterations = int(required_to_crawl_count/10000) + 1
+            for _ in range(no_iterations):
+                # Get urls from local_mongo
+                to_crawl_entries = list(local_mongo.collection.find({"status": 'to_crawl'}).limit(10000))
                 
-                # Get the documents that failed to insert
-                failed_docs = [op['op'] for op in failed_ops]
-                # Get the URLs that failed to insert
-                urls_failed_to_upload_to_mongo = [(doc['url'], doc['timestamp']) for doc in failed_docs]
-                n_failed_to_upload = len(urls_failed_to_upload_to_mongo)
-                # for url in urls_failed_to_upload_to_mongo:
-                #     logging.error(f"Failed to upload {url} to MongoDB")
-                # success_urls = [url for url in new_to_crawl_urls if url not in urls_failed_to_upload_to_mongo]
-                # # Delete successful urls from sqlite
-                # url_db.delete("to_crawl", success_urls)
-                # # print(f'success_urls:{success_urls}, len:{len(success_urls)}')
-                # print(failed_urls, len(failed_urls))
-            finally:
-                n_failed_to_upload = n_failed_to_upload if 'n_failed_to_upload' in locals() and isinstance(n_failed_to_upload, int) else 0
-            # # delete from sqlite
-            # if n_failed_to_upload < 9900:
-            url_db.delete("to_crawl", new_to_crawl_urls)
-            # print(n_failed_to_upload)
-            # else:
-            #     print(f'failed to upload {n_failed_to_upload} urls to mongo')
-            #     # exit the python script
-            #     # sys.exit(1)
-        print(f"attempted inserting {10000} urls to mongodb")
-        logging.info(f"attempted inserting {10000} urls to mongodb")
+                # Insert to online mongo
+                try:
+                    mongo.collection.insert_many(
+                        [
+                            {
+                                'url': entry['url'],
+                                'status': 'to_crawl',
+                                'timestamp': entry['timestamp']
+                            } 
+                            for entry in to_crawl_entries
+                        ],
+                        ordered=False)
+                except Exception as bwe:
+                    pass
+                
+                # Update status in local_mongo
+                local_mongo.collection.update_many(
+                        {'url': {'$in': [entry['url'] for entry in to_crawl_entries]},},
+                        {'$set': {'status': 'crawling'}}
+                    )
+            
+            print(f"attempted inserting {no_iterations*10000} to_crawl to online_mongo")
+            logging.info(f"attempted inserting {no_iterations*10000} to_crawl to online_mongo")
+            
+        # -------------------------------------------------------------------------------------------------------------------------
+        # Save error data to csv file from online_mongo
+        # ----------------------------------------------
+        no_iterations = int(mongo.collection.count_documents({'status': 'error'})/10000) + 1
+        for _ in no_iterations:
+            error_data = list(mongo.collection.find({'status': 'error'}).limit(10000))
+            formatted_for_csv = [{
+                    'url': error['url'],
+                    'timestamp': error['timestamp'],
+                    'status': error['status'],
+                    'status_code': error['status_code'] if 'status_code' in error else None,
+                    'error_type': error['error_type']
+                } for error in error_data]
+            # Append error data to csv
+            csv_file_path = 'error_data.csv'
+            file_exists = os.path.exists(csv_file_path)
+            with open(csv_file_path, 'a') as csvfile:
+                fieldnames = ['url', 'timestamp', 'status', 'status_code', 'error_type']
+                csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                if not file_exists:
+                    print(f"creating csv file: {csv_file_path}")
+                    # Write header only if file is empty
+                    csv_writer.writeheader()
+                # else:
+                #     print(f'csv file: \"{csv_file_path}\" exists')
+                csv_writer.writerows(formatted_for_csv)
+
+            print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}", end="\n\n")
+
+            # Delete from mongo
+            mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
         # ------------------------------------------------------------------------------------------------------------------------
-        # Save error data to csv
-        # -----------------------
-        error_data = mongo.collection.find({'status': 'error'}) # .limit(10)
-        formatted_for_csv = [{
-                'url': error['url'],
-                'timestamp': error['timestamp'],
-                'status': error['status'],
-                'status_code': error['status_code'] if 'status_code' in error else None,
-                'error_type': error['error_type']
-            } for error in error_data]
-        # Append error data to csv
-        csv_file_path = 'error_data.csv'
-        file_exists = os.path.exists(csv_file_path)
-        with open(csv_file_path, 'a') as csvfile:
-            fieldnames = ['url', 'timestamp', 'status', 'status_code', 'error_type']
-            csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if not file_exists:
-                print(f"creating csv file: {csv_file_path}")
-                # Write header only if file is empty
-                csv_writer.writeheader()
-            # else:
-            #     print(f'csv file: \"{csv_file_path}\" exists')
-            csv_writer.writerows(formatted_for_csv)
-
-        print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}", end="\n\n")
-
-        # Delete from mongo
-        mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
-        # ------------------------------------------------------------------------------------------------------------------------
-        time.sleep(5 * 60)  # sleep for 5 minutes
+        time.sleep(1 * 60)  # sleep for 1 minute
 
 
-# ======================================================
-# Save data from redis to csv file
-# ======================================================
-
-def crawled_data_consumer():
-    while True:
-        crawled_data = list(mongo.db['crawled_data'].find())
-        other_data = list(mongo.db['other_data'].find())
-        # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
-        if not crawled_data and not other_data:
-            # display_stats()
-            # print('========sleeping for 5 sec.....==========')   # No Data
-            time.sleep(10)
-        # if time.time()%60 == 0:
-        #     # display once every minute
-        #     display_stats()
-        combined_data = {"crawled_data":crawled_data, "other_data":other_data}
-        
-        # Save to .csv file
-        save_to_csv(combined_data)
-        
-        # Delete multiple data by id
-        mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
-        mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-        
-        # if len(crawled_data)>0:
-        #     logging.info(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: consumed: {len(crawled_data) + len(other_data)}')
-        #     print(f'consumed: {len(crawled_data) + len(other_data)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
 
 def backup_crawled_data():
     # ---------------------------------------------------------------------------
@@ -315,64 +421,67 @@ def backup_crawled_data():
             # log the error
             logging.exception(ex)
 
-'''
-# Connect to your Redis server
-redis_client = redis.Redis(
-    host=os.environ.get('REDIS_HOST', 'localhost'),
-    port = int(os.environ.get('REDIS_PORT', 6379)),
-    password=os.environ.get('REDIS_PASSWORD', None),
-)
 
 
-def pop_from_redis():
-    # print('call gari rako muji')
-    lists_to_pop = ['crawled_data', 'other_data']       # , 'crawled', 'to_crawl']
-    popped_data = {}
-    for list_name in lists_to_pop:
-        if list_name not in popped_data:
-            popped_data[list_name] = []
-        # print(f'list_name:{list_name}')
-        
-        # pop until the list is empty
-        while redis_client.llen(list_name) > 0:
-            # print(f'list_name:{list_name}')
-            popped_data[list_name].append(json.loads(redis_client.rpop(list_name)))
-    # print("return vayo muji")
-     return popped_data
-'''
+# ======================================================
+# Save data from online mongo to csv file
+# ======================================================
 
-'''
-    e.g. format
-    {
-        'crawled_data': {
-
-        },
-        'other_data': {
-            
-        }
-    }
-
-def consumer():
-    print('consumer')
-    pulled = 0
+def crawled_data_consumer():
     while True:
-        print(f'{time.time()}: ', end='')
-        # Old code using Redis
-        paragraphs = pop_from_redis()
-        if paragraphs:
-            save_to_csv(paragraphs)
-            pulled += sum([len(paragraphs[key]) for key in paragraphs.keys()])
-            print(f'======consumed: {len(paragraphs)}')     #\n\n current_count:{redis_client.llen("paragraphs")}')
-            # print(f'len(paragraphs): {sum([len(paragraphs[key]) for key in paragraphs.keys()])} \n\n paragraphs:{paragraphs}')
-        else:
-            print('========sleeping for 5 sec.==========')   # No Data
-            time.sleep(5)  # sleep for a while before consuming more items
+        no_iterations = int(mongo.db['crawled_data'].count_documents({})/10000) + 1
+        for _ in no_iterations:
+            crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
+            other_data = list(mongo.db['other_data'].find({}).limit(10000))
+            # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
+            if crawled_data or other_data:
+                combined_data = {"crawled_data":crawled_data, "other_data":other_data}
 
-'''
+                # Save to .csv file
+                save_to_csv(combined_data)
+
+                # Delete multiple data by id
+                mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
+                mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+            else:
+                sleep_duration = 10 # Sleep for 10 seconds
+                print('sleeping {sleep_duration} sec. : crawled_data_consumer')
+                time.sleep(sleep_duration)
+
 
 
 def save_to_csv(data, data_type="crawled_data"):
-    
+    '''
+        * Save the crawled_data to 'csv' file
+        * update_many status of parent_url to 'crawled' in local_mongo
+        
+        * data_item['parent_url'] is data in format: url <str>
+        
+        # Test
+        ```
+            # Pre existing data
+            local_mongo.collection.insert_many([
+                {'url': 'url_crawling', 'status': 'crawling', 'timestamp': time.time()},
+                {'url': 'url_crawled', 'status': 'crawled', 'timestamp': time.time()},
+                {'url': 'url_to_crawl', 'status': 'to_crawl', 'timestamp': time.time()},
+                {'url': 'some_other_url', 'status': 'to_crawl', 'timestamp': time.time()}
+            ])
+
+            entries = ['url_crawling', 'url_crawled', 'url_to_crawl', 'new_url']
+
+            # update status of parent_url to 'crawled' in local_mongo                                       
+            local_mongo.collection.update_many(
+                {'url':{'$in': entries}},
+                {'$set': {'status': 'crawled'}},
+            )
+
+            # Display records
+            print(list(local_mongo.collection.find({})))
+
+            # Delete from local_mongo
+            local_mongo.collection.delete_many({})
+        ```
+    '''
     for data_type, data_items in data.items():
         '''
             data_type: crawled_data, other_data
@@ -393,41 +502,22 @@ def save_to_csv(data, data_type="crawled_data"):
                     csv_writer.writeheader()
                 
                 try:
-                    # # Append the new data
-                    # csv_writer.writerows(data_items)
-                    if data_type == 'crawled_data':
-                        sqlite_db = URLDatabase(db_path="urls.db")
-                        urls_data_to_insert = []
-                        # csv_writer.writerow(data_item)
-
-                        # no need to check  if the url exists in to_crawl
-                        # if sqlite_db.exists("to_crawl",  data_item['parent_url']):
-                        urls_data_to_insert = [(data_item['parent_url'], time.time()) for data_item in data_items]
-                        
-                        # delete the url from to_crawl
-                        sqlite_db.delete("to_crawl", urls_data_to_insert)
-                        
-                        '''
-                        * data_item['parent_url'] is data in format:
-                            url <str>
-                        
-                        * For sqlite, we need data in format:
-                        {
-                            'url': url,
-                            'timestamp': timestamp
-                        }
-                        '''
-                        # insert the url to crawled
-                        sqlite_db.bulk_insert("crawled", urls_data_to_insert, show_progress=False)
-                        sqlite_db.close()
+                    # Get all unique crawled_urls
+                    entries = list(set([data_item['parent_url'] for data_item in data_items]))
+                    
+                    # update status of parent_url to 'crawled' in local_mongo
+                    local_mongo.collection.update_many(
+                        {'url':{'$in': entries}},
+                        {'$set': {'status': 'crawled'}},
+                    )
                     
                     # Save crawled data to csv file
                     csv_writer.writerows(data_items)
-
                 except Exception as ex:
                     print(ex)
                     # log the error
                     logging.exception(f'data_type:{data_type} exceptionL {ex}')
+
 
 
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
@@ -455,20 +545,6 @@ crawled_data_consumer_thread.start()
 # publisher_thread.join()
 # consumer_thread.join()    # waits for consumer_thread to finigh
 revoke_crawling_url_thread.join()  # Wait for the thread to finish
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

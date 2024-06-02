@@ -49,6 +49,7 @@ class URLDatabase:
 
             for i, (url, timestamp) in enumerate(url_timestamp_pairs):
                 try:
+                    print(f'inserting {url} into {table}')
                     self.cursor.execute(f'INSERT OR IGNORE INTO {table} (url, timestamp) VALUES (?, ?)', (url, timestamp))
                 except sqlite3.Error as e:
                     print(f"Failed to insert {url} into {table}: {e}")
@@ -115,25 +116,29 @@ if __name__ == "__main__":
     ]
     db.bulk_insert('crawled', crawled_urls)
 
+    import time
     # Bulk inserting multiple URLs into 'to_crawl' table
     to_crawl_urls = [
-        ('http://example.co.uk', '2024-05-27T12:34:56Z'),
-        ('http://example.fr', '2024-05-27T12:34:56Z'),
-        ('http://fuckme.org', '2024-05-27T12:34:56Z'),
-        ('http://example.de', '2024-05-27T12:34:56Z'),
-        ('http://nofuckme.org', '2024-05-27T12:34:56Z'),
+        ('http://example.com', time.time()),
+        ('http://example.co.uk', time.time()),
+        ('http://example.fr', time.time()),
+        ('http://fuckme.org', time.time()),
+        ('http://example.de', time.time()),
+        ('http://nofuckme.org', time.time()),
         # Add more URL, timestamp pairs
     ]
     db.bulk_insert('to_crawl', to_crawl_urls)
 
     # Getting URLs to crawl
-    urls_to_crawl = db.get_to_crawl(3)
-    print(urls_to_crawl)  # Output: List of 3 URLs from 'to_crawl' table
+    # urls_to_crawl = db.fetch('to_crawl', 3)
+    print(f'to_crawl: {db.fetch_all("to_crawl")}')  # Output: List of 3 URLs from 'to_crawl' table
 
     # Deleting URLs from both tables
-    db.delete(['http://example.com', 'http://example.org'])
-    print(db.exists('crawled', 'http://example.com'))  # Output: False
-    print(db.exists('to_crawl', 'http://example.org'))  # Output: False
+    # db.delete('to_crawl', ['http://example.com', 'http://example.org', 'invalid_url'])
+    # db.delete('to_crawl', [('http://example.com','sth'), ('http://example.org', 'seteht'), ('invalid_url','jfsal')])
+    print(f'to_crawl after delete: {db.fetch_all("to_crawl")}')  # Output: List of 3 URLs from 'to_crawl' table
+    print(f"exists to_crawl: {db.exists('crawled', 'http://example.com')}")  # Output: True
+    print(f"exists to_crawl: {db.exists('to_crawl', 'http://example.org')}")  # Output: False
 
     
     

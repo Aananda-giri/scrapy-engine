@@ -1,3 +1,41 @@
+[ ] Contribute to: [pybloom-filter](https://github.com/joseph-fox/python-bloomfilter). They have ~300 lines of code.
+
+* is mongo slowing down too?
+
+[ ] Migrate data from online mongo to local_mongo
+[ ] Migrate data from sqlite to local_mongo
+[ ] check is list(set()) fits somewhere else
+[ ] mongo -> mongo_online
+# sqlite operations are very slow (~700 writes per sec.
+), speed is decreasing with increse in data.
+    [ ] Use bloom filter to store crawled_urls: to implement function: exists()
+    [ ] multiple sqlite databases?
+    [X] check performance of mongo db.
+        * mongodb seems impressive
+            final write_rate:5213.6895298889385 with 2 Million entries 
+            average write rate: 
+
+[ ] merge some of the threads, while keeping the functions as they are
+[ ] why did ec2 hangs when running server? -> there was indentation error in server.py
+[ ] remove data from mongo
+[ ] re-create crash
+
+# Error before server crash
+pymongo.errors.NotPrimaryError: not primary, full error: {'topologyVersion': {'processId': ObjectId('665381432fc24ffa9118c13c'), 'counter': 12}, 'ok': 0.0, 'e
+rrmsg': 'not primary', 'code': 10107, 'codeName': 'NotWritablePrimary', '$clusterTime': {'clusterTime': Timestamp(1716900746, 684), 'signature': {'hash': b'\x
+83\x1fV\xee\xbb\x95F\xe4\xb6Bui\xf4O{p\x91\xf4\x9ar', 'keyId': 7351058967755227142}}, 'operationTime': Timestamp(1716900746, 684)}
+
+# Lesson: while scaling, everything that could go wrong would go wrong. Keep it simple.
+
+# problem:
+mongo is full again
+probable reasons:
+    sqlite write bottleneck (three threads are writing)
+    probable solution: only one thread reads/writes
+        * Crawled_data  thread writes to csv asyncronously and sqlite_thread takes them
+        * disable indexing
+        * same goes with revoke_crawling_url_thread
+
 [ ] problem: sqlite says: "Database is locked" what does it mean? are new values not being inserted?
 [ ] update display_stats function to accomodate sqlite
 # problem: No mechanism to handle duplicate data to csv
