@@ -35,6 +35,26 @@ except Exception as ex:
     logging.exception(ex)
 '''
 
+
+# ======================================================
+#   ===== Saving configs to mongo online ======
+# ======================================================
+
+
+# Update config in mongo
+configs = [
+        {'crawl_other_data': False},
+        {'crawl_paragraph_data':True},
+        # {'some_config':1000}
+    ]
+# Save configs
+mongo.set_configs(configs)
+
+print("\n -----------------------------")
+print('\tsaved configs to mongo')
+print(" -----------------------------\n")
+logging.info("saved configs to mongo")
+
 # ======================================================
 # Crawling  ==> to_crawl (if timestamp >2 hours)
 # ======================================================

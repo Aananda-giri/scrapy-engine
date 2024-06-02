@@ -1,3 +1,13 @@
+[ ] Auto Maintanance: 
+    * Once every 24 hours
+    * Duration:30 min?
+    * pause spiders
+    * save all data from mongo-db to local_mongo
+    * delete, re-create mongo collections to delete indexing
+    * restart server
+[ ] workflow -> show mongo online config & other collections
+[ ] save_other_data <boolean variable stored in server.py -> online_mongo>
+    * spiders get state of "save_other_data" to decide whether to crawl or not-to-crawl
 [ ] Use pybloom live and avoid local_mongo_altogether
 [ ] Avoid saving other_data?
 [ ] Contribute to: [pybloom-filter](https://github.com/joseph-fox/python-bloomfilter). They have ~300 lines of code.

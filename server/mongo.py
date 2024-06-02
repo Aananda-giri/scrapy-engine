@@ -154,8 +154,43 @@ class Mongo():
         return random_urls
     def fetch_all(self):
         return list(self.collection.find())
+    
+    def set_configs(self, configs):
+        '''
+        # Tests:
+            * variable types seems to be preserved
+            * if key exists, value is updated otherwise new key-value pair is created
+        # Format of configs
+        ```
+            configs = [
+                {'crawl_other_data': False},
+                {'crawl_paragraph_data':True},
+                {'some_config':1000}
+            ]
+        ```
+        '''
 
-
+        for config in configs:
+            self.db['config'].update_one(
+                {'name': list(config.keys())[0]},
+                {'$set': {'value': list(config.values())[0]}},
+                upsert=True
+            )
+    def get_configs(self):
+        '''
+        # Returns data of format:
+        ```
+            {
+                'crawl_other_data': False,
+                'crawl_paragraph_data': True
+            }
+        ```
+        '''
+        configs_data = self.db['config'].find({})
+        configs = {}
+        for config in configs_data:
+            configs[config['name']] = config['value']
+        return configs
 
 if __name__=="__main__":
     # delete all data and create unique index for field: 'url'

@@ -33,6 +33,23 @@ class MasterSlave(scrapy.Spider):
         # super(EkantipurSpider, self).__init__(*args, **kwargs)
         self.mongo = Mongo()
         
+        # ----------------------------------------------------------------------------
+        # config variable from mongo db to decide whether or not to crawl other_data
+        print('------------------------------------')
+        
+        # Get configs
+        configs = self.mongo.get_configs()
+        
+        # default: Do not Crawl other data
+        self.crawl_other_data = configs['crawl_other_data'] if 'crawl_other_data' in configs else False
+        print(f'config.crawl_other_data: {self.crawl_other_data}')
+        
+        # default: Crawl paragraph data
+        self.crawl_paragraph_data = configs['crawl_paragraph_data'] if 'crawl_paragraph_data' in configs else True
+        print(f'config.crawl_paragraph_data: {self.crawl_paragraph_data}')
+        print('------------------------------------')
+        # ----------------------------------------------------------------------------
+
         self.redis_client = redis.Redis(
             host=os.environ.get('REDIS_HOST', 'localhost'),
             port = int(os.environ.get('REDIS_PORT', 6379)),
@@ -63,78 +80,102 @@ class MasterSlave(scrapy.Spider):
   
         # yield every heading, paragraph from current page
         headings_and_paragraphs = response.css('h1::text, h2::text, h3::text, h4::text, h5::text, h6::text, p::text').getall()
-        the_crawled_data = []   # list for bulk upload
-        for paragraph in headings_and_paragraphs:
-            is_nepali, confidence = is_nepali_language(paragraph)
-            if is_nepali and is_valid_text_naive(paragraph):   # implement a way to detect nepali language (langid is not reliable)
-                # Save crawled data to redis
-                # self.crawled_data.append(
-                the_crawled_data.append({
-                        'parent_url': response.url,
-                        'page_title': response.css('title::text').get(),
-                        'paragraph': paragraph,
-                        # 'is_nepali_confidence': confidence
-                    })
-                # self.mongo.db['crawled_data'].insert_one(the_crawled_data)
-                '''
-                # Old Code using Redis: Redis turned out to be too slow for concurrent processes
-                self.redis_client.lpush('crawled_data', json.dumps(the_crawled_data))
-                '''
-        if the_crawled_data:self.mongo.db['crawled_data'].insert_many(the_crawled_data)
+        if self.crawl_paragraph_data:
+            # print('-------------------------------------------------')
+            # print(f'\ncrawling paragraph_data: {self.crawl_paragraph_data}')
+            # print('-------------------------------------------------')
+            # Crawl Paragraph Data only if config is set to True
+            the_crawled_data = []   # list for bulk upload
+            for paragraph in headings_and_paragraphs:
+                is_nepali, confidence = is_nepali_language(paragraph)
+                if is_nepali and is_valid_text_naive(paragraph):   # implement a way to detect nepali language (langid is not reliable)
+                    # Save crawled data to redis
+                    # self.crawled_data.append(
+                    the_crawled_data.append({
+                            'parent_url': response.url,
+                            'page_title': response.css('title::text').get(),
+                            'paragraph': paragraph,
+                            # 'is_nepali_confidence': confidence
+                        })
+                    # self.mongo.db['crawled_data'].insert_one(the_crawled_data)
+                    '''
+                    # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                    self.redis_client.lpush('crawled_data', json.dumps(the_crawled_data))
+                    '''
+            if the_crawled_data:self.mongo.db['crawled_data'].insert_many(the_crawled_data)
+        else:
+            pass
+            # print('-------------------------------------------------')
+            # print(f'Avoided crawling paragraph_data: {not self.crawl_paragraph_data}')
+            # print('-------------------------------------------------')
         # Saving drive links
-        the_other_data =  []    # list for bulk upload
-        for link in links:
-            is_drive_link, _ = is_google_drive_link(link.url)     #DriveFunctions.is_google_drive_link(link.url)
-            if is_drive_link:
-                the_other_data.append({
-                        'parent_url': response.url,
-                        'url': link.url,
-                        'text': link.text,
-                        'link_type': "drive_link",
-                        'link_description': None
-                })
-                # self.mongo.db['other_data'].insert_one(the_other_data)
-                '''
-                # Old Code using Redis: Redis turned out to be too slow for concurrent processes
-                # # self.other_data.append({
-                self.redis_client.lpush('other_data', json.dumps(the_other_data))
-                '''
-            else:
-                is_document, document_type, ignore_doc = is_document_link(link.url)
-                if is_document:
-                    if not ignore_doc:  # and doc_type != 'image'
-                        the_other_data.append({
+        if self.crawl_other_data:
+            # print('-------------------------------------------------')
+            # print(f'\ncrawling_other_data: {self.crawl_other_data}')
+            # print('-------------------------------------------------')
+            # config['crawl_other_data'] is True
+            # So crawl other data
+            the_other_data =  []    # list for bulk upload
+            for link in links:
+                is_drive_link, _ = is_google_drive_link(link.url)     #DriveFunctions.is_google_drive_link(link.url)
+                if is_drive_link:
+                    the_other_data.append({
                             'parent_url': response.url,
                             'url': link.url,
                             'text': link.text,
-                            'link_type': "document",
-                            'link_description': document_type
-                        })
-                        # self.mongo.db['other_data'].insert_one(the_other_data)
-
-                        '''
-                        # Old Code using Redis: Redis turned out to be too slow for concurrent processes
-                        # self.other_data.append({
-                        self.redis_client.lpush('other_data', json.dumps(the_other_data))
-                        '''
+                            'link_type': "drive_link",
+                            'link_description': None
+                    })
+                    # self.mongo.db['other_data'].insert_one(the_other_data)
+                    '''
+                    # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                    # # self.other_data.append({
+                    self.redis_client.lpush('other_data', json.dumps(the_other_data))
+                    '''
                 else:
-                    is_social_media, social_media_type = is_social_media_link(link.url)
-                    if is_social_media:
-                        the_other_data.append({
-                            'parent_url': response.url,
-                            'url': link.url,
-                            'text': link.text,
-                            'link_type': "social_media",
-                            'link_description': social_media_type
-                        })
-                        # self.mongo.db['other_data'].insert_one(the_other_data)
-                        '''
-                        # Old Code using Redis: Redis turned out to be too slow for concurrent processes
-                        self.redis_client.lpush('other_data', json.dumps())
-                        '''
+                    is_document, document_type, ignore_doc = is_document_link(link.url)
+                    if is_document:
+                        if not ignore_doc:  # and doc_type != 'image'
+                            the_other_data.append({
+                                'parent_url': response.url,
+                                'url': link.url,
+                                'text': link.text,
+                                'link_type': "document",
+                                'link_description': document_type
+                            })
+                            # self.mongo.db['other_data'].insert_one(the_other_data)
+
+                            '''
+                            # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                            # self.other_data.append({
+                            self.redis_client.lpush('other_data', json.dumps(the_other_data))
+                            '''
                     else:
-                        site_links.append(link)
-        if the_other_data: self.mongo.db['other_data'].insert_many(the_other_data)
+                        is_social_media, social_media_type = is_social_media_link(link.url)
+                        if is_social_media:
+                            the_other_data.append({
+                                'parent_url': response.url,
+                                'url': link.url,
+                                'text': link.text,
+                                'link_type': "social_media",
+                                'link_description': social_media_type
+                            })
+                            # self.mongo.db['other_data'].insert_one(the_other_data)
+                            '''
+                            # Old Code using Redis: Redis turned out to be too slow for concurrent processes
+                            self.redis_client.lpush('other_data', json.dumps())
+                            '''
+                        else:
+                            site_links.append(link)
+            if the_other_data: self.mongo.db['other_data'].insert_many(the_other_data)
+        else:
+            # print('-------------------------------------------------')
+            # print(f'Avoided crawling_other_data: {not self.crawl_other_data}')
+            # print('-------------------------------------------------')
+            # config['crawl_other_data'] is False
+            # So do not crawl other data
+            for link in links:
+                site_links.append(link)
 
         # Next Page to Follow: 
         the_to_crawl_urls = []    # list for bulk upload
