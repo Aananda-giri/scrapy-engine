@@ -10,7 +10,7 @@
     * save all data from mongo-db to local_mongo
     * delete, re-create mongo collections to delete indexing
     * restart server
-[ ] workflow -> show mongo online config & other collections
+[X] workflow -> show mongo online config & other collections
 [X] save_other_data <boolean variable stored in server.py -> online_mongo>
     * spiders get state of "save_other_data" to decide whether to crawl or not-to-crawl
 [ ] Use pybloom live and avoid local_mongo_altogether
