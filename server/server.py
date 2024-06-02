@@ -96,7 +96,7 @@ def revoke_crawling_url():
             if expired_count > 0:
                 print(f"revoke_crawling_url: {expired_count} urls expired")
                 no_iterations = int(expired_count / 10000) + 1
-                for _ in no_iterations:
+                for _ in range(no_iterations):
                     expired_crawling_urls = list(mongo.collection.aggregate(pipeline + [{"$limit": 10000}]))
                     
                     # Save to local mongo: by update_many
@@ -364,7 +364,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         error_count = mongo.collection.count_documents({'status': 'error'})
         if error_count > 0:
             no_iterations = int(error_count/10000) + 1
-            for _ in no_iterations:
+            for _ in range(no_iterations):
                 error_data = list(mongo.collection.find({'status': 'error'}).limit(10000))
                 if error_data:
                     formatted_for_csv = [{

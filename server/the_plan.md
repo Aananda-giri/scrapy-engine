@@ -1,3 +1,5 @@
+[ ] Use pybloom live and avoid local_mongo_altogether
+[ ] Avoid saving other_data?
 [ ] Contribute to: [pybloom-filter](https://github.com/joseph-fox/python-bloomfilter). They have ~300 lines of code.
 
 * is mongo slowing down too?
