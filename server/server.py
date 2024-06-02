@@ -90,26 +90,30 @@ def revoke_crawling_url():
         ]
         expired_count = list(mongo.collection.aggregate(pipeline + [{"$count": "count"}]))
         if expired_count:
+            # expired_count is empty if there are no expired urls
+            # expired_count : [{'count': 123}]    # if there are expired urls
             expired_count = expired_count[0]['count']
-            no_iterations = int(expired_count / 10000) + 1
-            for _ in no_iterations:
-                expired_crawling_urls = list(mongo.collection.aggregate(pipeline + [{"$limit": 10000}]))
-                
-                # Save to local mongo: by update_many
-                # since url is unique, it would avoid duplicates
-                urls_expired = [entry['url'] for entry in expired_crawling_urls]
-                try:
-                    local_mongo.collection.update_many({"url": {"$in": urls_expired}, "status": "crawling"}, {"$set": {"status": "to_crawl"}})
-                except Exception as ex:
-                    pass
-                
-                # Delete from mongo online
-                try:
-                    mongo.collection.delete_many({'status': 'crawling', 'url': {'$in': urls_expired}})
-                except Exception as ex:
-                    print(ex)
-                print(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
-                logging.info(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
+            if expired_count > 0:
+                print(f"revoke_crawling_url: {expired_count} urls expired")
+                no_iterations = int(expired_count / 10000) + 1
+                for _ in no_iterations:
+                    expired_crawling_urls = list(mongo.collection.aggregate(pipeline + [{"$limit": 10000}]))
+                    
+                    # Save to local mongo: by update_many
+                    # since url is unique, it would avoid duplicates
+                    urls_expired = [entry['url'] for entry in expired_crawling_urls]
+                    try:
+                        local_mongo.collection.update_many({"url": {"$in": urls_expired}, "status": "crawling"}, {"$set": {"status": "to_crawl"}})
+                    except Exception as ex:
+                        pass
+                    
+                    # Delete from mongo online
+                    try:
+                        mongo.collection.delete_many({'status': 'crawling', 'url': {'$in': urls_expired}})
+                    except Exception as ex:
+                        print(ex)
+                    print(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
+                    logging.info(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
         print('revoke_crawling_url: sleeping 5 minutes')
         # sleep for 5 minutes
         time.sleep(5 * 60)
@@ -355,34 +359,36 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         # -------------------------------------------------------------------------------------------------------------------------
         # Save error data to csv file from online_mongo
         # ----------------------------------------------
-        no_iterations = int(mongo.collection.count_documents({'status': 'error'})/10000) + 1
-        for _ in no_iterations:
-            error_data = list(mongo.collection.find({'status': 'error'}).limit(10000))
-            formatted_for_csv = [{
-                    'url': error['url'],
-                    'timestamp': error['timestamp'],
-                    'status': error['status'],
-                    'status_code': error['status_code'] if 'status_code' in error else None,
-                    'error_type': error['error_type']
-                } for error in error_data]
-            # Append error data to csv
-            csv_file_path = 'error_data.csv'
-            file_exists = os.path.exists(csv_file_path)
-            with open(csv_file_path, 'a') as csvfile:
-                fieldnames = ['url', 'timestamp', 'status', 'status_code', 'error_type']
-                csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                if not file_exists:
-                    print(f"creating csv file: {csv_file_path}")
-                    # Write header only if file is empty
-                    csv_writer.writeheader()
-                # else:
-                #     print(f'csv file: \"{csv_file_path}\" exists')
-                csv_writer.writerows(formatted_for_csv)
-
-            print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}", end="\n\n")
-
-            # Delete from mongo
-            mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
+        error_count = mongo.collection.count_documents({'status': 'error'})
+        if error_count > 0:
+            no_iterations = int(error_count/10000) + 1
+            for _ in no_iterations:
+                error_data = list(mongo.collection.find({'status': 'error'}).limit(10000))
+                if error_data:
+                    formatted_for_csv = [{
+                            'url': error['url'],
+                            'timestamp': error['timestamp'],
+                            'status': error['status'],
+                            'status_code': error['status_code'] if 'status_code' in error else None,
+                            'error_type': error['error_type']
+                        } for error in error_data]
+                    # Append error data to csv
+                    csv_file_path = 'error_data.csv'
+                    file_exists = os.path.exists(csv_file_path)
+                    with open(csv_file_path, 'a') as csvfile:
+                        fieldnames = ['url', 'timestamp', 'status', 'status_code', 'error_type']
+                        csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                        if not file_exists:
+                            print(f"creating csv file: {csv_file_path}")
+                            # Write header only if file is empty
+                            csv_writer.writeheader()
+                        # else:
+                        #     print(f'csv file: \"{csv_file_path}\" exists')
+                        csv_writer.writerows(formatted_for_csv)
+                    
+                    print(f"migrated {len(formatted_for_csv)} \"error?\" from mongo ->  {csv_file_path}", end="\n\n")
+                    # Delete from mongo
+                    mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
         # ------------------------------------------------------------------------------------------------------------------------
         print('to_crawl_cleanup_and_mongo_to_crawl_refill: sleeping 1 minute')
         time.sleep(1 * 60)  # sleep for 1 minute
@@ -506,20 +512,22 @@ def save_to_csv(data, data_type="crawled_data"):
 def crawled_data_consumer():
     print('crawled_data_consumer: started')
     while True:
-        no_iterations = int(mongo.db['crawled_data'].count_documents({})/10000) + 1
-        for _ in no_iterations:
-            crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
-            other_data = list(mongo.db['other_data'].find({}).limit(10000))
-            # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
-            if crawled_data or other_data:
-                combined_data = {"crawled_data":crawled_data, "other_data":other_data}
+        crawled_count = mongo.db['crawled_data'].count_documents({})
+        if crawled_count > 0:
+            no_iterations = int(crawled_count/10000) + 1
+            for _ in no_iterations:
+                crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
+                other_data = list(mongo.db['other_data'].find({}).limit(10000))
+                # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
+                if crawled_data or other_data:
+                    combined_data = {"crawled_data":crawled_data, "other_data":other_data}
 
-                # Save to .csv file
-                save_to_csv(combined_data)
-                print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
-                # Delete multiple data by id
-                mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
-                mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+                    # Save to .csv file
+                    save_to_csv(combined_data)
+                    print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
+                    # Delete multiple data by id
+                    mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
+                    mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
         
         sleep_duration = 10 # Sleep for 10 seconds
         print('crawled_data_consumer: sleeping {sleep_duration} sec.')
