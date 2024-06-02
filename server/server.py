@@ -81,6 +81,7 @@ def revoke_crawling_url():
     local_mongo.collection.delete_many({'url': {'$in': urls}})
     '''
     while True:
+        print('revoke_crawling_url started')
         timestamp = time.time() - 5 * 60  # 5 minutes
         pipeline = [
             {"$match": {"status": "crawling", "timestamp": {"$lt": str(timestamp)}}},
@@ -109,7 +110,7 @@ def revoke_crawling_url():
                     print(ex)
                 print(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
                 logging.info(f"recovered {len(urls_expired)} expired \"crawling\" urls from mongo -> local_mongo")
-                
+        print('revoke_crawling_url: sleeping 5 minutes')
         # sleep for 5 minutes
         time.sleep(5 * 60)
 
@@ -181,6 +182,7 @@ def display_stats():
         # -----------------------------------------------------------------------
 
         # Sleep for 1 minute
+        print('display_stats: sleeping 1 minute')
         time.sleep(60)
 
 
@@ -382,6 +384,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
             # Delete from mongo
             mongo.collection.delete_many({'url': {'$in': [error['url'] for error in formatted_for_csv]}, 'status': 'error'})
         # ------------------------------------------------------------------------------------------------------------------------
+        print('to_crawl_cleanup_and_mongo_to_crawl_refill: sleeping 1 minute')
         time.sleep(1 * 60)  # sleep for 1 minute
 
 
@@ -391,7 +394,10 @@ def backup_crawled_data():
     ### Backup file named crawled_data.csv & other_data.csv after every 12 hours
     # ---------------------------------------------------------------------------
     while True:
+        print('backup thread started')
+        
         # Backup once for every 12 hours
+        print('backup_thread: sleeping 12 hours')
         time.sleep(12 * 60 * 60)  # Sleep for 12 hours
 
         # Check if 'crawled_data.csv' exists
@@ -408,6 +414,8 @@ def backup_crawled_data():
         try:
             # backup 'crawled_data.csv' with index max_index+1
             shutil.copy('crawled_data.csv', f'crawled_data_backup_{max_index+1}.csv')
+            print(f'backup created: crawled_data_backup_{max_index+1}.csv')
+            logging.info(f'backup created: crawled_data_backup_{max_index+1}.csv')
         except Exception as ex:
             print(ex)
             # log the error
@@ -426,29 +434,6 @@ def backup_crawled_data():
 # ======================================================
 # Save data from online mongo to csv file
 # ======================================================
-
-def crawled_data_consumer():
-    while True:
-        no_iterations = int(mongo.db['crawled_data'].count_documents({})/10000) + 1
-        for _ in no_iterations:
-            crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
-            other_data = list(mongo.db['other_data'].find({}).limit(10000))
-            # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
-            if crawled_data or other_data:
-                combined_data = {"crawled_data":crawled_data, "other_data":other_data}
-
-                # Save to .csv file
-                save_to_csv(combined_data)
-
-                # Delete multiple data by id
-                mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
-                mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-            else:
-                sleep_duration = 10 # Sleep for 10 seconds
-                print('sleeping {sleep_duration} sec. : crawled_data_consumer')
-                time.sleep(sleep_duration)
-
-
 
 def save_to_csv(data, data_type="crawled_data"):
     '''
@@ -518,6 +503,27 @@ def save_to_csv(data, data_type="crawled_data"):
                     # log the error
                     logging.exception(f'data_type:{data_type} exceptionL {ex}')
 
+def crawled_data_consumer():
+    print('crawled_data_consumer: started')
+    while True:
+        no_iterations = int(mongo.db['crawled_data'].count_documents({})/10000) + 1
+        for _ in no_iterations:
+            crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
+            other_data = list(mongo.db['other_data'].find({}).limit(10000))
+            # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
+            if crawled_data or other_data:
+                combined_data = {"crawled_data":crawled_data, "other_data":other_data}
+
+                # Save to .csv file
+                save_to_csv(combined_data)
+                print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
+                # Delete multiple data by id
+                mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
+                mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+        
+        sleep_duration = 10 # Sleep for 10 seconds
+        print('crawled_data_consumer: sleeping {sleep_duration} sec.')
+        time.sleep(sleep_duration)
 
 
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
