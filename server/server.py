@@ -127,10 +127,10 @@ revoke_crawling_url_thread.start()
 
 
 def display_stats():
-        '''
-            This is a thread to display the stats of the crawling process every 1 minute
-        '''
-        # while True:
+    '''
+        This is a thread to display the stats of the crawling process every 1 minute
+    '''
+    while True:
         # -----------------------------------------------------------------------
         # --------------------------------- Stats ------------------------------- 
         # -----------------------------------------------------------------------
@@ -324,7 +324,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 local_mongo.collection.delete_many({})
             ```
         '''
-        online_to_crawl_count = mongo.collection.count_documents({"status": 'to_crawl'}) < 50000
+        online_to_crawl_count = mongo.collection.count_documents({"status": 'to_crawl'})
         required_to_crawl_count = 50000 - online_to_crawl_count
         if required_to_crawl_count > 0:
             # refill 10000 at a time
@@ -470,7 +470,7 @@ def save_to_csv(data, data_type="crawled_data"):
 
             # Display records
             print(list(local_mongo.collection.find({})))
-
+            
             # Delete from local_mongo
             local_mongo.collection.delete_many({})
         ```
@@ -526,7 +526,7 @@ def crawled_data_consumer():
                 # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
                 if crawled_data or other_data:
                     combined_data = {"crawled_data":crawled_data, "other_data":other_data}
-
+                    
                     # Save to .csv file
                     save_to_csv(combined_data)
                     print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
