@@ -246,48 +246,50 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
     logging.info("mongo_to_crawl_refill started")
     while True:    
         # +1 to avoid 0 division error and int() returns floor value. e.g. 1.9 -> 1
-        n_iterations = int(mongo.collection.count_documents({"status": 'to_crawl?'})/10000) + 1
-        for _ in list(range(n_iterations)):
-            # print(_)
-            # 10000 at a time
-            
-            # Get all urls from "to_crawl?"
-            entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
-            entries = list(entries)
-            # Save to local mongo
-            # print('pre-insert')
-            start_time = time.time()
-            try:
-                _ = local_mongo.collection.insert_many(
-                        [
-                            {
-                                'url': entry['url'],
-                                'status': 'to_crawl',
-                                'timestamp': entry['timestamp']
-                            } 
-                            for entry in entries
-                        ],
-                        ordered=False)
-            except Exception as e:
-                pass
-            # print(f'inserted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
-            # Delete from online mongo
-            start_time = time.time()
-            try:
-                _ = mongo.collection.delete_many(
-                    {
-                        'status': 'to_crawl?',
-                        'url': {'$in': [entry['url'] for entry in entries]}
-                    })
-            except Exception as e:
-                pass
-            # print(f'deleted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
-            # print('deleted')
-            
-    
-    
-        print(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
-        logging.info(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
+        to_crawl_count = mongo.collection.count_documents({"status": 'to_crawl?'})
+        if to_crawl_count > 0:
+            n_iterations = int(to_crawl_count/10000) + 1
+            for _ in list(range(n_iterations)):
+                # print(_)
+                # 10000 at a time
+                
+                # Get all urls from "to_crawl?"
+                entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
+                entries = list(entries)
+                # Save to local mongo
+                # print('pre-insert')
+                start_time = time.time()
+                try:
+                    _ = local_mongo.collection.insert_many(
+                            [
+                                {
+                                    'url': entry['url'],
+                                    'status': 'to_crawl',
+                                    'timestamp': entry['timestamp']
+                                } 
+                                for entry in entries
+                            ],
+                            ordered=False)
+                except Exception as e:
+                    pass
+                # print(f'inserted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
+                # Delete from online mongo
+                start_time = time.time()
+                try:
+                    _ = mongo.collection.delete_many(
+                        {
+                            'status': 'to_crawl?',
+                            'url': {'$in': [entry['url'] for entry in entries]}
+                        })
+                except Exception as e:
+                    pass
+                # print(f'deleted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
+                # print('deleted')
+            print(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
+            logging.info(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
+        else:
+            print('no to_crawl? to migrate')
+            logging.info('no to_crawl? to migrate')
         # ------------------------------------------------------------------------------------------------------------------------
         # mongo_to_crawl_refill
         # -----------------------
@@ -512,9 +514,12 @@ def save_to_csv(data, data_type="crawled_data"):
 def crawled_data_consumer():
     print('crawled_data_consumer: started')
     while True:
+        # empty crawled_data and other_data from online mongio
         crawled_count = mongo.db['crawled_data'].count_documents({})
-        if crawled_count > 0:
-            no_iterations = int(crawled_count/10000) + 1
+        other_count = mongo.db['other_data'].count_documents({})
+        max_data_count = max(crawled_count, other_count)
+        if max_data_count > 0 :
+            no_iterations = int(max_data_count/10000) + 1
             for _ in range(no_iterations):
                 crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
                 other_data = list(mongo.db['other_data'].find({}).limit(10000))
@@ -530,7 +535,7 @@ def crawled_data_consumer():
                     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
         
         sleep_duration = 10 # Sleep for 10 seconds
-        print('crawled_data_consumer: sleeping {sleep_duration} sec.')
+        print(f'crawled_data_consumer: sleeping {sleep_duration} sec.')
         time.sleep(sleep_duration)
 
 
