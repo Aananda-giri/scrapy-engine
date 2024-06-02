@@ -50,11 +50,11 @@ class MasterSlave(scrapy.Spider):
         print('------------------------------------')
         # ----------------------------------------------------------------------------
 
-        self.redis_client = redis.Redis(
-            host=os.environ.get('REDIS_HOST', 'localhost'),
-            port = int(os.environ.get('REDIS_PORT', 6379)),
-            password=os.environ.get('REDIS_PASSWORD', None),
-        )
+        # self.redis_client = redis.Redis(
+        #     host=os.environ.get('REDIS_HOST', 'localhost'),
+        #     port = int(os.environ.get('REDIS_PORT', 6379)),
+        #     password=os.environ.get('REDIS_PASSWORD', None),
+        # )
         
         # self.start_urls = self.fetch_start_urls()
         # self.start_urls = [data_item['url'] for data_item in self.mongo.fetch_start_urls()]
