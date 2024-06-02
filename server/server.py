@@ -533,10 +533,10 @@ def crawled_data_consumer():
                     # Delete multiple data by id
                     mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
                     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-        
-        sleep_duration = 10 # Sleep for 10 seconds
-        print(f'crawled_data_consumer: sleeping {sleep_duration} sec.')
-        time.sleep(sleep_duration)
+        else:
+            sleep_duration = 10 # Sleep for 10 seconds
+            print(f'crawled_data_consumer: sleeping {sleep_duration} sec.')
+            time.sleep(sleep_duration)
 
 
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)

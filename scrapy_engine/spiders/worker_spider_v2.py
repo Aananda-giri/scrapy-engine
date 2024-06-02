@@ -151,7 +151,9 @@ class MasterSlave(scrapy.Spider):
                 #     # self.mongo.append_url_to_crawl(de_fragmented_url)
                 
                 # self.mongo.append_url_to_crawl(de_fragmented_url)
-                the_to_crawl_urls.append(de_fragmented_url)
+                if len(de_fragmented_url) > 0 and len(de_fragmented_url) < 1000:
+                    # avoid urls with length greater than 1000
+                    the_to_crawl_urls.append(de_fragmented_url)
                 
                 # else:
                 #     if self.mongo.append_url_crawling(de_fragmented_url):
