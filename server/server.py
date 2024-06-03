@@ -63,7 +63,9 @@ def run_shub_code():
     while True:
         print('run_shub_code: started')
         os.system('node shub_runner.js')
-        print('run_shub_code: sleeping 6 hours')
+        print('-----------------------------------------------')
+        print('\t run_shub_code: sleeping 6 hours')
+        print('-----------------------------------------------')
         time.sleep(6 * 60 * 60)  # sleep for 6 hours
 
 
@@ -571,9 +573,10 @@ def crawled_data_consumer():
             time.sleep(sleep_duration)
 
 
-shub_thread = threading.Thread(target=run_shub_code)
-shub_thread.daemon = True
-shub_thread.start()
+# crontab seems better option for this
+# shub_thread = threading.Thread(target=run_shub_code)
+# shub_thread.daemon = True
+# shub_thread.start()
 
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread.daemon = True
