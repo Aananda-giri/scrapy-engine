@@ -1,5 +1,5 @@
-# stores code to file: 'soa_crawl.js'
-%%writefile soa_crawl.js
+// # stores code to file: 'soa_crawl.js'
+// %%writefile soa_crawl.js
 'use strict';
 // const excelToJson = require('convert-excel-to-json');
 // const puppeteer = require('puppeteer');
@@ -192,13 +192,26 @@ document.getElementsByClassName('btn-content')[6].click()
 document.getElementsByClassName('mat-ripple control-element')[8].click()
 */
 
-
-
 let configs = [
-    {'username':'<username>', 'password':'<password>', 'jobs_page':'https://app.zyte.com/p/<project-id>/jobs', 'clone_index':6, 'run_index':8}, // checked
-    {'username':'<username>', 'password':'<password>', 'jobs_page':'https://app.zyte.com/p/<project-id>/jobs', 'clone_index':6, 'run_index':8}, // checked
+  {'username':'aanandaprashadgiri@yahoo.com', 'password':'wAW!T8BZ*A_QH#v', 'jobs_page':'https://app.zyte.com/p/753046/jobs', 'clone_index':6, 'run_index':8}, // checked
+  {'username':'aananda.giri@yahoo.com', 'password':'asfdABXW4@', 'jobs_page':'https://app.zyte.com/p/753047/jobs', 'clone_index':6, 'run_index':8},     // checked
+  {'username':'mokinjay@protonmail.com', 'password':"YZbjZ:H'SU^v-'3@", 'jobs_page':'https://app.zyte.com/p/753064/jobs', 'clone_index':6, 'run_index':8},     // checked
+  {'username':'aanandaprashadgiri@proton.me', 'password':"b&p8'uQp'aA$*rK", 'jobs_page':'https://app.zyte.com/p/753065/jobs', 'clone_index':6, 'run_index':8},     // checked
+  {'username':'076bei001.aananda@proton.me', 'password':'Cb:xFnNU9"]K*}U', 'jobs_page':'https://app.zyte.com/p/753079/jobs', 'clone_index':6, 'run_index':8},     // checked
+  {'username':'int.aananda@proton.me', 'password':'Cb:xFnNU9"]K*}U', 'jobs_page':'https://app.zyte.com/p/753077/jobs', 'clone_index':6, 'run_index':8},     // checked
+
+  {'username':'aananda.giri@proton.me', 'password':'Cb:xFnNU9"]K*}U', 'jobs_page':'https://app.zyte.com/p/753083/jobs', 'clone_index':6, 'run_index':8},  // checked
+
+  {'username':'Aananda.giri@yandex.com', 'password':';e@4EU&ChaKjEkg', 'jobs_page':'https://app.zyte.com/p/753088/jobs', 'clone_index':6, 'run_index':8}, // checked
+  {'username':'kritrim@proton.me', 'password':'}_M7uux4w$>z;ww', 'jobs_page':'https://app.zyte.com/p/753479/jobs', 'clone_index':6, 'run_index':8}, // checked
+
+]
+
+// let configs = [
+//     {'username':'<username>', 'password':'<password>', 'jobs_page':'https://app.zyte.com/p/<project-id>/jobs', 'clone_index':6, 'run_index':8}, // checked
+//     {'username':'<username>', 'password':'<password>', 'jobs_page':'https://app.zyte.com/p/<project-id>/jobs', 'clone_index':6, 'run_index':8}, // checked
   
-  ]
+//   ]
 
 for (let config of configs){
     myFunction(config.username, config.password, config.jobs_page, config.clone_index, config.run_index)
