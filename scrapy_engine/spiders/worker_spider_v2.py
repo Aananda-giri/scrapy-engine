@@ -176,7 +176,8 @@ class MasterSlave(scrapy.Spider):
             # So do not crawl other data
             for link in links:
                 # To avoid crawling documents or social media links
-                if not is_document_or_media(link):
+                
+                if not is_document_or_media(link.url):
                     site_links.append(link)
 
         # Next Page to Follow: 
