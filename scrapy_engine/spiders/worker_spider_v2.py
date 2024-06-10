@@ -1,5 +1,5 @@
 
-from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab, remove_fragments_from_url, is_nepali_language, is_valid_text_naive
+from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab, remove_fragments_from_url, is_nepali_language, is_valid_text_naive, is_document_or_media
 import scrapy
 # import pybloom_live
 import scrapy
@@ -175,7 +175,9 @@ class MasterSlave(scrapy.Spider):
             # config['crawl_other_data'] is False
             # So do not crawl other data
             for link in links:
-                site_links.append(link)
+                # To avoid crawling documents or social media links
+                if not is_document_or_media(link):
+                    site_links.append(link)
 
         # Next Page to Follow: 
         the_to_crawl_urls = []    # list for bulk upload
@@ -192,7 +194,7 @@ class MasterSlave(scrapy.Spider):
                 #     # self.mongo.append_url_to_crawl(de_fragmented_url)
                 
                 # self.mongo.append_url_to_crawl(de_fragmented_url)
-                if len(de_fragmented_url) > 0 and len(de_fragmented_url) < 1000:
+                if len(de_fragmented_url.strip()) > 0 and len(de_fragmented_url) < 1000:
                     # avoid urls with length greater than 1000
                     the_to_crawl_urls.append(de_fragmented_url)
                 

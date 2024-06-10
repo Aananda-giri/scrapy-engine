@@ -411,7 +411,12 @@ def is_special_domain_to_crawl(url):
     # crawl some non '.np' domains
     return url.startswith("https://www.bbc.com/nepali/") or url.startswith("https://np.usembassy.gov/ne/")
 
-
+def is_document_or_media(url):
+  is_social_media, _ = is_social_media_link(url)
+  is_document, _, _ = is_document_link(url)
+  if is_social_media or is_document:
+    return True
+  return False
 def should_we_crawl_it(new_url, visited_urls_base=None):
   # return true if it is one of first 1000 .np domain
   parsed_url = urlparse(new_url)
