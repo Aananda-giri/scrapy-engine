@@ -1,3 +1,5 @@
+[ ] check size of mongo and if it is bottlenecking (storage/RAM/Processing) No mongo_local, bloom function for crawled, CSV file + random retrieval for to_crawl (custom protocol storing 10k data in each seperate CSV file)
+
 [X] Change Mongo, Redis passwords -> they  got pushed to github
     * make `--assume-unchanged`: <branch:scrapy_hub> mongo.py, scrapy_v2.py
     * update: google colab
