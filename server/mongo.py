@@ -1,3 +1,4 @@
+import csv
 import os
 import time
 from pymongo.server_api import ServerApi
@@ -15,8 +16,8 @@ class Mongo():
             self.db = client[db_name]
             self.collection = client[db_name][collection_name]
             
-            # one time operation
-            # self.collection.create_index('url', unique=True)
+            # Ensure Index is Created for faster search operations
+            self.collection.create_index('url', unique=True)
         else:
             
             uri = f"mongodb+srv://jokeleopedia:{os.environ.get('mongo_password')}@scrapy-engine.5cqch4y.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
@@ -31,16 +32,22 @@ class Mongo():
             self.collection = self.db[collection_name]  # using single collection for all urls
             # # one time operation
             # self.collection.create_index('url', unique=True)
-    def check_connection(self):        
-        # Create a new client and connect to the server
-        uri = f"mongodb+srv://jokeleopedia:{os.environ.get('mongo_password')}@scrapy-engine.5cqch4y.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
-        client = MongoClient(uri, server_api=ServerApi('1'))
-        # ping to confirm a successful connection
+    
+    def append_error_data(self, data):
+        # Delete url if it's status is either 'to_crawl' or crawling
+        # if status is crawled, try/except should avoid creating error url
+        results = list(self.collection.find({'url':data['url'], 'status': {'$in': ['to_crawl', 'crawling']}}))
+        if results:
+            self.collection.delete_one({'_id':results[0]['_id']})
+
         try:
-            client.admin.command('ping')
-            print("Pinged your deployment. You successfully connected to MongoDB!")
-        except Exception as e:
-            print(e)
+            # Try inserting url
+            self.collection.insert_one(data)
+            return True # inserted
+        except  Exception as ex:
+            print(ex)
+            return   # error data exists
+
     def append_url_crawled(self, url):
         try:
             # Try inserting url
@@ -48,12 +55,7 @@ class Mongo():
         except  Exception as ex:
             # url exists: change status to 'crawled'
             self.collection.update_one({'url':url}, {'$set': {'status':'crawled'}})
-    def delete_to_crawl(self, url):
-        try:
-            self.collection.delete_one({'url':url, 'status':'to_crawl'})
-        except Exception as ex:
-            pass
-            print(ex)
+
     def append_url_crawling(self, url):
         try:
             # Try inserting url
@@ -91,21 +93,106 @@ class Mongo():
             except  Exception as ex:
                 pass
                 # print(ex)    # url exists
-
-    def append_error_data(self, data):
-        # Delete url if it's status is either 'to_crawl' or crawling
-        # if status is crawled, try/except should avoid creating error url
-        results = list(self.collection.find({'url':data['url'], 'status': {'$in': ['to_crawl', 'crawling']}}))
-        if results:
-            self.collection.delete_one({'_id':results[0]['_id']})
-
+    
+    def check_connection(self):        
+        # Create a new client and connect to the server
+        uri = f"mongodb+srv://jokeleopedia:{os.environ.get('mongo_password')}@scrapy-engine.5cqch4y.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
+        client = MongoClient(uri, server_api=ServerApi('1'))
+        # ping to confirm a successful connection
         try:
-            # Try inserting url
-            self.collection.insert_one(data)
-            return True # inserted
-        except  Exception as ex:
+            client.admin.command('ping')
+            print("Pinged your deployment. You successfully connected to MongoDB!")
+        except Exception as e:
+            print(e)
+    
+    def delete_to_crawl(self, url):
+        try:
+            self.collection.delete_one({'url':url, 'status':'to_crawl'})
+        except Exception as ex:
+            pass
             print(ex)
-            return   # error data exists
+    
+    def export_local_mongo(self):
+        '''
+        # Export the data from local_mongo to a csv file 'local_mongo.csv'
+        with headers: 'url', 'timestamp', 'status'
+
+
+        # Comments
+        * 10K at a time was very slow. 100K at a time is still slow though..
+        '''
+        def save_to_csv(data, csv_file_path='local_mongo.csv', field_names=['url', 'timestamp', 'status']):
+            file_exists = os.path.exists(csv_file_path)
+            with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+                # Create a CSV writer object
+                csv_writer = csv.DictWriter(csvfile, fieldnames=field_names)
+                
+                # If the file doesn't exist, write the header
+                if not file_exists:
+                    print('writing header')
+                    csv_writer.writeheader()
+                
+                # Write the data to the CSV file
+                try:
+                    # Save data to csv file
+                    csv_writer.writerows(data)
+                except Exception as ex:
+                    print(ex)
+        # save_to_csv(entries)
+        
+        entries_count = local_mongo.collection.count_documents({})
+        print(f'Exporting {entries_count} entries')
+        # get all entries 10000 at a time
+        for i in range(0, entries_count, 100000):
+            entries = list(self.collection.find({}).skip(i).limit(100000))
+            entries = [{'url':entry['url'], 'timestamp':entry['timestamp'], 'status':entry['status']} for entry in entries]
+            print(f'Exporting {i} to {i+100000} entries. step: {int(i/100000)}/{int(entries_count/100000)}')
+            save_to_csv(entries)
+        
+    def import_to_local_mongo(self):
+        '''
+        # Load the data from local_mongo.csv to local_mongo
+        * 10K at a time
+        '''
+        def load_from_csv(csv_file_path='local_mongo.csv', field_names=['url', 'timestamp', 'status']):
+            def save_to_mongo(self, entries):
+                # Insert multiple data
+                '''
+                ordered=False: If an error occurs during the processing of one of the write operations, MongoDB will continue to process remaining write operations in the queue.
+                '''
+                try:
+                    # self.collection.insert_many([{'url':data['url'], 'timestamp':data['timestamp'], 'status':data['status']} for data in datas], ordered=False)
+                    self.collection.insert_many(entries, ordered=False)
+                except Exception as ex:
+                    pass
+                    # print(ex)
+            data = []
+            import_count = 0
+            with open(csv_file_path, 'r', newline='', encoding='utf-8') as csvfile:
+                # Create a CSV reader object
+                csv_reader = csv.DictReader(csvfile)
+                for row in csv_reader:
+                    '''
+                    format of data is:
+                    [
+                        {
+                            'url': 'https://psc.gov.np/others/4/d46d4ca7616bcde106e08f4b8636a247e84450197b6062248f2cb8cd2f550277b55612bd7320cd3f2d7aec2ada0707ba992e0a2bfb66a7154cf921a2ae37028964.NDLeVePim0d~oLhNjuuA4I~L7sdJOUPqysLgcC6c-.html',
+                            'timestamp': '1716021918.59285',
+                            'status': 'crawled'
+                        }, 
+                        ...
+                    ]
+                    ''' 
+                    data.append(row)
+                    if len(data) > 10000:
+                        # Save to mongo
+                        save_to_mongo(self, data)
+                        data = []   # re-initialize data
+                        import_count += 10000
+                        print(f'Import count: {import_count} iteration: {int(import_count/10000)}')
+            # return data
+        # load_from_csv()
+        load_from_csv()
 
     def recover_expired_crawling(self, created_before=7200):
         # def convert_from_crawling_to_to_crawl(urls):
@@ -200,3 +287,19 @@ if __name__=="__main__":
     for collection_name in collection_names:
         mongo.db_handler.delete_all(collection_name=collection_name)
         mongo.db_handler.db[collection_name].create_index('url', unique=True)
+
+    
+    
+
+    # # local mongo
+    # # from mongo import Mongo
+    # local_mongo = Mongo(local=True)
+
+    # # Get all entries with limit 10
+    # print(local_mongo.find({}).limit(10))
+
+    # entries_count = local_mongo.collection.count_documents({})
+    # # get all entries 10000 at a time
+    # for i in range(0, entries_count, 10000):
+    #     entries = list(local_mongo.find({}).skip(i).limit(10000))
+    #     append_to_csv(entries)
