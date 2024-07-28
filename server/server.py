@@ -228,6 +228,7 @@ def display_stats():
 
 def to_crawl_cleanup_and_mongo_to_crawl_refill():
     '''
+        * `to_crawl?` are next links given by crawler. add to_carwl? from online_mongo to local_mongo if url is not crwaled
         * This thread will run once every 1.5 hours? 
         - lets not allowmake it sleep, the delays from operations should be enouogh
     '''
