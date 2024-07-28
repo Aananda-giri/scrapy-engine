@@ -137,7 +137,7 @@ def revoke_crawling_url():
                     # since url is unique, it would avoid duplicates
                     urls_expired = [entry['url'] for entry in expired_crawling_urls]
                     try:
-                        local_mongo.collection.update_many({"url": {"$in": urls_expired}, "status": "crawling"}, {"$set": {"status": "to_crawl"}})
+                        local_mongo.collection.update_many({"url": {"$in": urls_expired}, "status": "crawling"}, {"$set": {"status": "recovered"}})
                     except Exception as ex:
                         pass
                     

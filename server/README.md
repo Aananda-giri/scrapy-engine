@@ -12,4 +12,11 @@ local_mongo:
     'status': 'crawled',
     'timestamp': time.time()
 }]
+
+
+* Status: <str>
+    * to_crawl: url to crawl
+    * recovered : url recovered from online_mongo whose status was `crwaling` for more than 5 minutes
+    * crawling: url sent to online_mongo to crawl
+    * crawled: url crawled
 ```
