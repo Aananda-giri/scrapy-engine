@@ -10,7 +10,7 @@ from pymongo import MongoClient
 
 class Mongo():
     def __init__(self, db_name='scrapy-engine', collection_name="urls-collection"):
-        uri = "mongodb+srv://jokeleopedia:GXpVzoUJYWoXRlKN@scrapy-engine.xwugtdk.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
+        uri = f"mongodb+srv://jokeleopedia:tkhv7y0FUZTHDi8t@scrapy-engine.5cqch4y.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
         # uri = f"mongodb+srv://{os.environ.get('user_heroku')}:{os.environ.get('pass_heroku')}@cluster0.dgeujbs.mongodb.net/?retryWrites=true&w=majority"
         
         # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
@@ -22,7 +22,7 @@ class Mongo():
         self.collection = self.db[collection_name]  # using single collection for all urls
         
     def check_connection(self):        
-        uri = f"mongodb+srv://{os.environ.get('mongo_username')}:{os.environ.get('mongo_password')}@scrapy-engine.xwugtdk.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
+        uri = f"mongodb+srv://jokeleopedia:tkhv7y0FUZTHDi8t@scrapy-engine.5cqch4y.mongodb.net/?retryWrites=true&w=majority&appName=scrapy-engine"
         # Create a new client and connect to the server
         client = MongoClient(uri, server_api=ServerApi('1'))
         # ping to confirm a successful connection
@@ -144,7 +144,42 @@ class Mongo():
     def fetch_all(self):
         return list(self.collection.find())
 
+    def set_configs(self, configs):
+        '''
+        # Tests:
+            * variable types seems to be preserved
+            * if key exists, value is updated otherwise new key-value pair is created
+        # Format of configs
+        ```
+            configs = [
+                {'crawl_other_data': False},
+                {'crawl_paragraph_data':True},
+                {'some_config':1000}
+            ]
+        ```
+        '''
 
+        for config in configs:
+            self.db['config'].update_one(
+                {'name': list(config.keys())[0]},
+                {'$set': {'value': list(config.values())[0]}},
+                upsert=True
+            )
+    def get_configs(self):
+        '''
+        # Returns data of format:
+        ```
+            {
+                'crawl_other_data': False,
+                'crawl_paragraph_data': True
+            }
+        ```
+        '''
+        configs_data = self.db['config'].find({})
+        configs = {}
+        for config in configs_data:
+            configs[config['name']] = config['value']
+        return configs
 
 if __name__=="__main__":
     # delete all data and create unique index for field: 'url'
