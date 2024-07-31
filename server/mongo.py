@@ -34,19 +34,54 @@ class Mongo():
             # self.collection.create_index('url', unique=True)
     
     def append_error_data(self, data):
-        # Delete url if it's status is either 'to_crawl' or crawling
-        # if status is crawled, try/except should avoid creating error url
-        results = list(self.collection.find({'url':data['url'], 'status': {'$in': ['to_crawl', 'crawling']}}))
-        if results:
-            self.collection.delete_one({'_id':results[0]['_id']})
+        '''
+        # e.g. first add new data and update it
+        
+        import time
+        from mongo import Mongo
+        mongo = Mongo()
 
-        try:
-            # Try inserting url
-            self.collection.insert_one(data)
-            return True # inserted
-        except  Exception as ex:
-            print(ex)
-            return   # error data exists
+        error_data = {'url':'https://google.com', 'timestamp':time.time(), 'status':'error', 'status_code':400, 'error_type':'HttpError'}
+        error_data2 = {'url':'https://google.com', 'timestamp':'now', 'status':'not-error', 'status_code':'errororrororo', 'error_type':'HttpError'}
+
+        # insert error_data
+        mongo.db['test'].update_one(
+                {'url': error_data['url']},
+                {'$set': error_data}, # data is dict with error info
+                upsert=True
+            )
+        list(mongo.db['test'].find({'url':'https://google.com'}))   # output: [{'_id': ObjectId('66a9c58c0bee3830ff4dcba3'), 'url': 'https://google.com', 'error_type': 'HttpError', 'status': 'error', 'status_code': 400, 'timestamp': 1722402186.1221087}]
+
+        # update with error_data2
+        mongo.db['test'].update_one(
+                {'url': error_data2['url']},
+                {'$set': error_data2}, # data is dict with error info
+                upsert=True
+            )
+        list(mongo.db['test'].find({'url':'https://google.com'}))   # output: [{'_id': ObjectId('66a9c58c0bee3830ff4dcba3'), 'url': 'https://google.com', 'error_type': 'HttpError', 'status': 'not-error', 'status_code': 'errororrororo', 'timestamp': 'now'}]
+        '''
+
+        # upsert the  error data
+        self.collection.update_one(
+                {'url': data['url']},
+                {'$set': data}, # data is dict with error info
+                upsert=True
+            )
+        return
+        
+        # Delete url if it's status is either 'to_crawl' or crawling
+        # if status is crawled, try/except should avoid creating error 
+        # results = list(self.collection.find({'url':data['url'], 'status': {'$in': ['to_crawl', 'crawling']}}))
+        # if results:
+        #     self.collection.delete_one({'_id':results[0]['_id']})
+
+        # try:
+        #     # Try inserting url
+        #     self.collection.insert_one(data)
+        #     return True # inserted
+        # except  Exception as ex:
+        #     print(ex)
+        #     return   # error data exists
 
     def append_url_crawled(self, url):
         try:
