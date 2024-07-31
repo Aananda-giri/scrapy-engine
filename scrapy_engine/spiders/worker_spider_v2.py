@@ -263,3 +263,10 @@ class MasterSlave(scrapy.Spider):
             error_data = {'url':response.url, 'timestamp':time.time(), 'status':'error', 'status_code':response.status, 'error_type':'TimeoutError'}
             self.mongo.append_error_data(error_data)
             # print(f'\n\n\n\n{error_data}\n\n\n\n\n\n')
+        else:
+            self.logger.error('Unknown error on %s', failure.request.url)
+
+            # Save error data on mongodb
+            error_data = {'url': failure.request.url, 'timestamp': time.time(), 'status': 'error', 'status_code': response.status, 'error_type': 'Unknown'}
+            # print(f'\n\n oh oo.. Unknown error : {error_data}')
+            self.mongo.append_error_data(error_data)
