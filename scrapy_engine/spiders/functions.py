@@ -558,7 +558,7 @@ def is_document_link(link):
   ]
   # other extensions
   other_extensions = ['.css', '.exe', '.bin', '.rss', '.dmg', '.iso', '.apk']
-
+  
   extensions = {
       'document': document_extensions,
       'presentation': presentation_extensions,
@@ -569,7 +569,7 @@ def is_document_link(link):
       'image': image_extensions,
       'other': other_extensions
   }
-
+  
   for doc_type, extension_list in extensions.items():
     for extension in extension_list:
       if link.lower().endswith(extension):
