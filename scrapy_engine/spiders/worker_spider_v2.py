@@ -90,6 +90,16 @@ class MasterSlave(scrapy.Spider):
         for url in start_urls:
             yield scrapy.Request(url, callback=self.parse, errback=self.errback_httpbin)  # , dont_filter=True  : allows visiting same url again
     def parse(self, response):
+        if 'text/html' not in response.headers.get('Content-Type', '').decode('utf-8'):
+            # response is not text/html (its probably some document)
+            # save the link to mongo
+            self.mongo.db['other_data'].insert_one(
+                {
+                    'url': response.url,
+                    'Content-Type': response.headers.get('Content-Type', '').decode('utf-8'),
+                }
+            )
+            return
         links = LinkExtractor(deny_extensions=[]).extract_links(response)
         drive_links = []    # Drive links
         site_links = []     # website links
