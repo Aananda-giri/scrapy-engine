@@ -50,3 +50,32 @@ def remove_file_if_empty(file_path):
     else:
         print(f"File is not empty or does not exist: {file_path}")
         return False
+
+
+
+def count_lines_in_file(file_path):
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
+        return sum(1 for line in file)
+
+def count_lines_in_directory(directory='./'):
+    ignore_folders = ['__pycache__', '.git', 'project.egg-info', 'archive', 'migrations']
+    extensions_to_count = ['.py']
+    total_lines = 0
+    
+    for root, _, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            # ignore folder
+            if True not in [ignore_folder in file_path for ignore_folder in ignore_folders]:
+                # only count for `extensions_to_count`
+                if True in [file_path.endswith(extension) for extension in extensions_to_count]:
+                    try:
+                        lines = count_lines_in_file(file_path)
+                        print(f"{file_path}: {lines} lines")
+                        total_lines += lines
+                    except Exception as e:
+                        print(f"Could not read {file_path}: {e}")
+    return total_lines
+
+
+# count_lines_in_directory()  # 6393
