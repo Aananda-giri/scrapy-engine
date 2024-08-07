@@ -471,8 +471,14 @@ def backup_crawled_data():
             print(ex)
             # log the error
             logging.exception(ex)
-
-
+        
+        # Keep at most 3 copies of crawled_data
+        for index in range(max_index-2):
+            # Delete backup copies with index <= max_index - 2
+            try:
+                os.remove(f'other_data_backup_{index}.csv')
+            except Exception as Ex:
+                print(Ex)
 
 # ======================================================
 # Save data from online mongo to csv file
