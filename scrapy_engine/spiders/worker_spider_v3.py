@@ -3,7 +3,7 @@ from .functions import is_social_media_link, is_document_link, is_google_drive_l
 # import pybloom_live
 import scrapy
 import dotenv
-# import json
+import json
 # import os
 # import redis
 # import threading
@@ -94,24 +94,35 @@ class MasterSlave(scrapy.Spider):
             # print(f'\ncrawling paragraph_data: {self.crawl_paragraph_data}')
             # print('-------------------------------------------------')
             # Crawl Paragraph Data only if config is set to True
-            the_crawled_data = []   # list for bulk upload
+            the_crawled_data = {
+                            'parent_url': response.url,
+                            'page_title': response.css('title::text').get(),
+                            'paragraphs': []  # list for bulk upload
+                            # 'is_nepali_confidence': confidence
+            }
             for paragraph in headings_and_paragraphs:
                 is_nepali, confidence = is_nepali_language(paragraph)
                 if is_nepali and is_valid_text_naive(paragraph):   # implement a way to detect nepali language (langid is not reliable)
                     # Save crawled data to redis
                     # self.crawled_data.append(
-                    the_crawled_data.append({
-                            'parent_url': response.url,
-                            'page_title': response.css('title::text').get(),
-                            'paragraph': paragraph,
-                            # 'is_nepali_confidence': confidence
-                        })
+                    if paragraph not in the_crawled_data['paragraphs']:
+                        # set would give better time complexity but they dont preserve order.
+                        the_crawled_data['paragraphs'].append(paragraph)
                     # self.mongo.db['crawled_data'].insert_one(the_crawled_data)
                     '''
                     # Old Code using Redis: Redis turned out to be too slow for concurrent processes
                     self.redis_client.lpush('crawled_data', json.dumps(the_crawled_data))
                     '''
-            if the_crawled_data:self.mongo.db['crawled_data'].insert_many(the_crawled_data)
+            
+            if the_crawled_data:
+                the_crawled_data['paragraphs'] = json.dumps(the_crawled_data['paragraphs'])
+                try:
+                    self.mongo.db['crawled_data'].insert_one(the_crawled_data)
+                except DuplicateKeyError:
+                    pass    # pass DuplicateKeyError. it means data already exists
+                except Exception as Ex:
+                    print(Ex)
+                self.mongo.db['crawled_data'].insert(the_crawled_data)
         else:
             pass
             # print('-------------------------------------------------')
