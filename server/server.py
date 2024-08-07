@@ -320,7 +320,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                     pass
                 # print(f'deleted. time:{time.time()-start_time}, rate:{len(entries)/(time.time()-start_time)}')
                 # print('deleted')
-            print(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
+            print(f"migrated <= {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
             logging.info(f"migrated {n_iterations*10000} \"to_crawl?\" from online_mongo to local_mongo")
         else:
             print('no to_crawl? to migrate')
