@@ -15,8 +15,8 @@ from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError
 
 import sys
-
-sys.path.append('../../../server/')
+# print(os.listdir('../server/'))
+sys.path.append('../server/')
 from mongo import Mongo
 
 
