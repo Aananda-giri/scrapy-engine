@@ -3,8 +3,15 @@ import os
 import time
 from pymongo.server_api import ServerApi
 
+
+# load dotenv: giving absulute path otherwise load_dotenv not working with `sys.path.append` from worker_spider.py
 from dotenv import load_dotenv
-load_dotenv()
+# Get the absolute path to the directory containing this script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Construct the absolute path to the .env file
+dotenv_path = os.path.join(current_dir, '.env')
+
+load_dotenv(dotenv_path)
 
 # Creating mangodb
 from pymongo import MongoClient
@@ -67,14 +74,13 @@ class Mongo():
                 {'$set': data}, # data is dict with error info
                 upsert=True
             )
-        return
         
         # Delete url if it's status is either 'to_crawl' or crawling
         # if status is crawled, try/except should avoid creating error 
         # results = list(self.collection.find({'url':data['url'], 'status': {'$in': ['to_crawl', 'crawling']}}))
         # if results:
         #     self.collection.delete_one({'_id':results[0]['_id']})
-
+        
         # try:
         #     # Try inserting url
         #     self.collection.insert_one(data)

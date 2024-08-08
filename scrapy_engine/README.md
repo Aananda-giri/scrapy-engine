@@ -1,15 +1,23 @@
+[] post-process: if crawled data is str: make it list
+[] upload code to zyte
+[X] drive rename spider to worker_spider
+
 # To run the code
-`scrapy crawl worker_spider_v2 -o worker_spider_v2.json`
+`scrapy crawl worker_spider -o worker_spider.json`
 
 # TODO
-* [ ] Set envs for zyte and run spider from github code
+*[ ] https://cmc.edu.np/hospital/doctors/67
+        /worker_spider_v3.py", line 295, in errback_httpbin
+        error_data = {'url': failure.request.url, 'timestamp': time.time(), 'status': 'error', 'status_code': response.status, 'error_type': 'Unknown'}
+        AttributeError: 'NoneType' object has no attribute 'status'
 * [ ] crawled_data
         [X]current_headers: ['parent_url', 'page_title', 'paragraph']
         [x]new_headers: ['parent_url', 'page_title', 'paragraphs']
 
                 where, paragraphs is list of paragraph from current_headers
         [ ] upload to drive and delete `crawled_data.csv` (new data with column `paragraphs` instead of `paragraph` will be added)
-        [ ] update zyte code (maybe push via github)
+        [X] update zyte code (maybe push via github)
+        [ ] zyte code auto push via github
 * [ ] bloom function from oscar dataset to avoid crawling urls crawled by oscar again.
 * [ ] Auto generate zyte version of code
 * [ ] Handle pdf urls as in pdf_engine
@@ -17,6 +25,8 @@
 * [ ] 2024-08-02 01:39:31 [scrapy.core.scraper] ERROR: Spider error processing <GET https://www.nrb.org.np/contents/uploads/2022/03/SP-4-Text-for-website.pdf> (referer: None)
 File "/content/scrapy-engine/scrapy_engine/spiders/worker_spider_v2.py", line 77, in parse
 AttributeError: Response content isn't text
+
+* [ ] Set envs for zyte and run spider from github code
 
 
 * [X] Error not handled

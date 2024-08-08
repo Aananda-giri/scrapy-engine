@@ -1,20 +1,23 @@
-
 from .functions import is_social_media_link, is_document_link, is_google_drive_link, is_same_domain, is_np_domain,is_special_domain_to_crawl, load_env_var_in_google_colab, remove_fragments_from_url, is_nepali_language, is_valid_text_naive, is_document_or_media
 # import pybloom_live
 import scrapy
 import dotenv
 import json
-# import os
+import os
 # import redis
 # import threading
 import time
 
 # from scrapy import signals# , Spider
 from scrapy.linkextractors import LinkExtractor
-from server.mongo import Mongo
 
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError
+
+import sys
+
+sys.path.append('../../../server/')
+from mongo import Mongo
 
 
 class WorkerSpider(scrapy.Spider):
