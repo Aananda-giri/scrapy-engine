@@ -13,3 +13,4 @@ server/error_data.csv
 test/*
 
 zyte/scrapy_engine/scrapy_engine/spiders/.env
+zyte/.env
