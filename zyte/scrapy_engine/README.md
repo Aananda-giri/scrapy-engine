@@ -1,11 +1,12 @@
-# **scrap_hub -> zyte code**:
-* run `main.py`
+[] post-process: if crawled data is str: make it list
+[] upload code to zyte
 
-# To run the worker
+
+# To run the code
 `scrapy crawl worker_spider_v2 -o worker_spider_v2.json`
 
 # TODO
-* [ ] Set envs for zyte and run spider from github code
+
 * [ ] crawled_data
         [X]current_headers: ['parent_url', 'page_title', 'paragraph']
         [x]new_headers: ['parent_url', 'page_title', 'paragraphs']
@@ -20,6 +21,8 @@
 * [ ] 2024-08-02 01:39:31 [scrapy.core.scraper] ERROR: Spider error processing <GET https://www.nrb.org.np/contents/uploads/2022/03/SP-4-Text-for-website.pdf> (referer: None)
 File "/content/scrapy-engine/scrapy_engine/spiders/worker_spider_v2.py", line 77, in parse
 AttributeError: Response content isn't text
+
+* [ ] Set envs for zyte and run spider from github code
 
 
 * [X] Error not handled

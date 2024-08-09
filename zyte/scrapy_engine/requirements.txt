@@ -3,5 +3,5 @@ pymongo==4.6.1
 python-dotenv==1.0.0
 redis==5.0.1
 requests==2.31.0
-Scrapy==2.7.1
+Scrapy==2.11.2
 Twisted==22.10.0
