@@ -477,6 +477,15 @@ def backup_crawled_data():
             # Delete backup copies with index <= max_index - 2
             try:
                 os.remove(f'other_data_backup_{index}.csv')
+                print(f'removed other_data_backup_{index}.csv')
+            except Exception as Ex:
+                print(Ex)
+            
+            
+            # Delete backup copies with index <= max_index - 2
+            try:
+                os.remove(f'crawled_data_backup_{index}.csv')
+                print(f'removed crawled_data_backup_{index}.csv')
             except Exception as Ex:
                 print(Ex)
 
