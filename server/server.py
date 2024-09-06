@@ -479,7 +479,8 @@ def backup_crawled_data():
                 os.remove(f'other_data_backup_{index}.csv')
                 print(f'removed other_data_backup_{index}.csv')
             except Exception as Ex:
-                print(Ex)
+                pass
+                # print(Ex)
             
             
             # Delete backup copies with index <= max_index - 2
@@ -487,7 +488,8 @@ def backup_crawled_data():
                 os.remove(f'crawled_data_backup_{index}.csv')
                 print(f'removed crawled_data_backup_{index}.csv')
             except Exception as Ex:
-                print(Ex)
+                pass
+                # print(Ex)
 
 # ======================================================
 # Save data from online mongo to csv file
