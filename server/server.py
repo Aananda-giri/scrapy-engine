@@ -21,6 +21,11 @@ load_dotenv()
 import logging
 logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
 
+from bloom import BloomFilterThread
+
+# load oscar dataset bloom filter (contains urls that are already crawled by oscar_2201 dataset from huggingface)
+oscar_bloom_filter = BloomFilterThread(save_file='oscar_bloom_filter.pkl')
+
 
 '''
 logging.debug("debug")       # logs all the logs below
@@ -291,6 +296,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 # Get all urls from "to_crawl?"
                 entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
                 entries = list(entries)
+                entries = [entry for entry in entries if entry['url'] not in oscar_bloom_filter]
                 # Save to local mongo
                 # print('pre-insert')
                 start_time = time.time()

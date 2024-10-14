@@ -1,3 +1,5 @@
+* [ ] address pdf urls (frin mero-school scrapy-engine)
+
 * [ ] drive code to access the crawled data
 
 * [ ] Give one more chance of crawling to recovered_urls?
