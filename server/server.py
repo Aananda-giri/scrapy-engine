@@ -1,11 +1,12 @@
-import os
-import sys
-import time
 import csv
 import json
+import os
 import redis
+import requests
 import shutil
+import sys
 import threading
+import time
 
 from mongo import Mongo
 mongo = Mongo()
@@ -16,7 +17,6 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 from dotenv import load_dotenv
 load_dotenv()
-
 
 import logging
 logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
@@ -569,7 +569,13 @@ def save_to_csv(data, data_type="crawled_data"):
                     # log the error
                     logging.exception(f'data_type:{data_type} exceptionL {ex}')
 
-import time
+def notify_idle():
+   bot_message = "The crawler's taking a nap. Time to wake it up and get it moving!"
+   bot_token = os.environ.get('TELEGRAM_TOKEN')
+   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + user_id + '&parse_mode=Markdown&text=' + bot_message
+   response = requests.get(send_text)
+   print(f'idle: notified user:{response}')
+   # return response.json()
 
 def crawled_data_consumer():
     
@@ -578,7 +584,7 @@ def crawled_data_consumer():
     '''
     print('crawled_data_consumer: started')
     last_save_time = time.time()  # Track the last time save_to_csv() was called
-
+    notified_once = False         # To notify only once in each idle peroid
     while True:
         # Empty crawled_data and other_data from online mongo
         crawled_count = mongo.db['crawled_data'].count_documents({})
@@ -597,6 +603,7 @@ def crawled_data_consumer():
                     # Save to .csv file
                     save_to_csv(combined_data)
                     last_save_time = time.time()  # Update the last save time
+                    notified_once = False
                     print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
 
                     # Delete multiple data by id
@@ -604,9 +611,10 @@ def crawled_data_consumer():
                     mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]}})
 
         # Check if it's been more than 5 minutes since the last save
-        if time.time() - last_save_time > 5 * 60:
+        if (time.time() - last_save_time > 5 * 60) and not notified_once:
             notify_idle()
             last_save_time = time.time()  # Reset last save time after notifying
+            notified_once = True
 
         else:
             sleep_duration = 30  # Sleep for 30 seconds
