@@ -569,32 +569,50 @@ def save_to_csv(data, data_type="crawled_data"):
                     # log the error
                     logging.exception(f'data_type:{data_type} exceptionL {ex}')
 
+import time
+
 def crawled_data_consumer():
+    
+    '''
+    *  invoke `notify_idle()` function if `save_to_csv()` is not called for 5 minutes,
+    '''
     print('crawled_data_consumer: started')
+    last_save_time = time.time()  # Track the last time save_to_csv() was called
+
     while True:
-        # empty crawled_data and other_data from online mongio
+        # Empty crawled_data and other_data from online mongo
         crawled_count = mongo.db['crawled_data'].count_documents({})
         other_count = mongo.db['other_data'].count_documents({})
         max_data_count = max(crawled_count, other_count)
-        if max_data_count > 0 :
-            no_iterations = int(max_data_count/10000) + 1
+
+        if max_data_count > 0:
+            no_iterations = int(max_data_count / 10000) + 1
             for _ in range(no_iterations):
                 crawled_data = list(mongo.db['crawled_data'].find({}).limit(10000))
                 other_data = list(mongo.db['other_data'].find({}).limit(10000))
-                # print(f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}: ', end='')
+
                 if crawled_data or other_data:
-                    combined_data = {"crawled_data":crawled_data, "other_data":other_data}
-                    
+                    combined_data = {"crawled_data": crawled_data, "other_data": other_data}
+
                     # Save to .csv file
                     save_to_csv(combined_data)
+                    last_save_time = time.time()  # Update the last save time
                     print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
+
                     # Delete multiple data by id
-                    mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
-                    mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
+                    mongo.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]}})
+                    mongo.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]}})
+
+        # Check if it's been more than 5 minutes since the last save
+        if time.time() - last_save_time > 5 * 60:
+            notify_idle()
+            last_save_time = time.time()  # Reset last save time after notifying
+
         else:
-            sleep_duration = 30 # Sleep for 10 seconds
+            sleep_duration = 30  # Sleep for 30 seconds
             print(f'crawled_data_consumer: sleeping {sleep_duration} sec.')
             time.sleep(sleep_duration)
+
 
 
 # crontab seems better option for this
