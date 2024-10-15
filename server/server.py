@@ -296,7 +296,8 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 # Get all urls from "to_crawl?"
                 entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
                 entries = list(entries)
-                entries = [entry for entry in entries if entry['url'] not in oscar_bloom_filter]
+                # making two lists entries and entries_non_crawled in order to save entries_non_crawled to local_mongo and delete all entries from online_mongo
+                entries_non_crawled = [entry for entry in entries if entry['url'] not in oscar_bloom_filter]
                 # Save to local mongo
                 # print('pre-insert')
                 start_time = time.time()
@@ -308,7 +309,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                                     'status': 'to_crawl',
                                     'timestamp': entry['timestamp']
                                 } 
-                                for entry in entries
+                                for entry in entries_non_crawled
                             ],
                             ordered=False)
                 except Exception as e:
@@ -569,13 +570,16 @@ def save_to_csv(data, data_type="crawled_data"):
                     # log the error
                     logging.exception(f'data_type:{data_type} exceptionL {ex}')
 
-def notify_idle():
-   bot_message = "The crawler's taking a nap. Time to wake it up and get it moving!"
-   bot_token = os.environ.get('TELEGRAM_TOKEN')
-   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + user_id + '&parse_mode=Markdown&text=' + bot_message
-   response = requests.get(send_text)
-   print(f'idle: notified user:{response}')
-   # return response.json()
+def notify_idle(bot_message=None):
+    if not bot_message:
+        bot_message = "The crawler's taking a nap. Time to wake it up and get it moving!"
+    bot_message = str(round(os.path.getsize('crawled_data.csv')/(1024*1024), 2) if os.path.exists('crawled_data.csv') else 0) + 'Mb: ' + bot_message
+    bot_token = os.environ.get('TELEGRAM_TOKEN')
+    user_id = os.environ.get('TELEGRAM_USER_ID')
+    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + user_id + '&parse_mode=Markdown&text=' + bot_message
+    response = requests.get(send_text)
+    print(f'idle: notified user:{response}')
+    # return response.json()
 
 def crawled_data_consumer():
     
@@ -603,7 +607,10 @@ def crawled_data_consumer():
                     # Save to .csv file
                     save_to_csv(combined_data)
                     last_save_time = time.time()  # Update the last save time
-                    notified_once = False
+                    if notified_once:
+                        # it would be nice to notify user when the crawler is back online
+                        notify_idle("The crawler’s awake and on the move! It’s working hard to fetch the latest data.")
+                        notified_once = False
                     print(f"crawled_data: saved {len(crawled_data)} crawled_data and {len(other_data)} other_data to csv file")
 
                     # Delete multiple data by id
@@ -612,6 +619,9 @@ def crawled_data_consumer():
 
         # Check if it's been more than 5 minutes since the last save
         if (time.time() - last_save_time > 5 * 60) and not notified_once:
+            print(f'\n =========================================================== ')
+            print(f'\t\t crawler is idle. notifying user \t\t')
+            print(f'\n =========================================================== \n ')
             notify_idle()
             last_save_time = time.time()  # Reset last save time after notifying
             notified_once = True
@@ -627,7 +637,7 @@ def crawled_data_consumer():
 # shub_thread = threading.Thread(target=run_shub_code)
 # shub_thread.daemon = True
 # shub_thread.start()
-
+notify_idle('why tf is it not notifying?')
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread.daemon = True
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread.start()
