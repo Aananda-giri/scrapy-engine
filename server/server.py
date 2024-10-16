@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format
 from bloom import BloomFilterThread
 
 # load oscar dataset bloom filter (contains urls that are already crawled by oscar_2201 dataset from huggingface)
-oscar_bloom_filter = BloomFilterThread(save_file='oscar_bloom_filter.pkl')
+npberta_oscar_bloom_filter = BloomFilterThread(save_file='bloom_filter.pkl')
 
 
 '''
@@ -297,7 +297,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
                 entries = list(entries)
                 # making two lists entries and entries_non_crawled in order to save entries_non_crawled to local_mongo and delete all entries from online_mongo
-                entries_non_crawled = [entry for entry in entries if entry['url'] not in oscar_bloom_filter]
+                entries_non_crawled = [entry for entry in entries if entry['url'] not in npberta_oscar_bloom_filter]
                 # Save to local mongo
                 # print('pre-insert')
                 start_time = time.time()
@@ -637,7 +637,7 @@ def crawled_data_consumer():
 # shub_thread = threading.Thread(target=run_shub_code)
 # shub_thread.daemon = True
 # shub_thread.start()
-notify_idle('why tf is it not notifying?')
+# notify_idle('why tf is it not notifying?')
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread = threading.Thread(target=to_crawl_cleanup_and_mongo_to_crawl_refill)
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread.daemon = True
 to_crawl_cleanup_and_mongo_to_crawl_refill_thread.start()
