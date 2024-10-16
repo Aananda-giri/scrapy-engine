@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format
 from bloom import BloomFilterThread
 
 # load oscar dataset bloom filter (contains urls that are already crawled by oscar_2201 dataset from huggingface)
-npberta_oscar_bloom_filter = BloomFilterThread(save_file='bloom_filter.pkl')
+npberta_oscar_bloom_filter = BloomFilterThread(save_file='npberta_oscar_bloom_filter.pkl')
 
 
 '''
