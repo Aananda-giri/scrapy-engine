@@ -1,13 +1,18 @@
 # Distributed Scrapy script to crawl online nepali news sites
+
 ### workflow (img)
+
 ![workflow](server/workflow.png)
 
-* Worker: Distributed Scrapy Script that performs the actual crawling
-* Server: Central Scrpit that collects the crawled data
+- Worker: Distributed Scrapy Script that performs the actual crawling
+- Server: Central Scrpit that collects the crawled data
 
+- **[crawled_data](https://drive.google.com/drive/folders/10OKChsGz5MBxMPl2xmJeHfYSZIasONj1?usp=sharing)**
 
 ### Save mongo-db api key and redis api key in file: server/.env
+
 format:
+
 ```
 
 # get them from: https://cloud.mongodb.com/
@@ -22,24 +27,30 @@ REDIS_HOST='<redis-host>'
 ```
 
 ## Test run the scrapy-engine
-`scrapy crawl worker_spider_v2 -o worker_spider_v2.json`
+
+`scrapy crawl worker_spider -o worker_spider.json`
 
 ## To run worker in google colab:
-* refer to : `scrapy_engine_google_colab.ipynb`
+
+- refer to : `scrapy_engine_google_colab.ipynb`
 
 ### To run the server
+
 ```
 cd server
 python3 server.py
 ```
-* Redis: to get crawled data
-* MongoDb: to store urls working with
-* generates two .csv files: crawled_data.csv, other_data.csv
+
+- Redis: to get crawled data
+- MongoDb: to store urls working with
+- generates two .csv files: crawled_data.csv, other_data.csv
 
 ## Re-initialize Database
-* note:It will delete everything in MongoDb, Redis and .csv files
+
+- note:It will delete everything in MongoDb, Redis and .csv files
 
   ### Mongo
+
   ```
   # Convert all urls with status: crawled -> to_crawl
   from mongo import Mongo
@@ -52,11 +63,11 @@ python3 server.py
   crawled_data = list(db.db['crawled_data'].find())
   other_data = list(db.db['other_data'].find())
   combined_data = {"crawled_data":crawled_data, "other_data":other_data}
-  
+
   # Delete multiple data by id
   db.db['crawled_data'].delete_many({"_id": {"$in": [data['_id'] for data in crawled_data]} })
   db.db['other_data'].delete_many({"_id": {"$in": [data_ot['_id'] for data_ot in other_data]} })
-  
+
   # Create index for unique url
   db.collection.create_index('url', unique=True)
 
@@ -70,6 +81,7 @@ python3 server.py
   ```
 
   ### Redis
+
   ```
   from dotenv import load_dotenv
   load_dotenv()
@@ -90,8 +102,8 @@ python3 server.py
   redis_client.keys()
   ```
 
-
   ### CSV Files
+
   ```
   # Remove crawled_data.csv
   !rm crawled_data.csv
@@ -100,9 +112,8 @@ python3 server.py
   !rm other_data.csv
   ```
 
-
-
 ### load csv data
+
 ```
 rows=[]
 with open('nepali_dataset.csv', 'r') as csvfile:
@@ -115,6 +126,7 @@ with open('nepali_dataset.csv', 'r') as csvfile:
 ```
 
 # Urls to crawl from
+
 ```
 ["https://kantipurtv.com/", "https://www.janaboli.com/", "https://ekagaj.com/", "https://www.nepalviews.com/", "https://hib.gov.np/", "https://butwalmun.gov.np/", "https://swasthyakhabar.com/", "https://hetaudamun.gov.np/", "https://hr.parliament.gov.np/", "https://www.immigration.gov.np/", "https://pppc.bagamati.gov.np/newsandnotices", "http://mahakalimundarchula.gov.np/taxonomy/term/110", "https://www.dor.gov.np/home/news", "https://np.usembassy.gov/ne/", "https://lawcommission.gov.np/np/", "https://sabailamun.gov.np/ne/", "https://daokathmandu.moha.gov.np/", "https://barjumun.gov.np/", "https://na.parliament.gov.np/", "https://panchkhalmun.gov.np/ne/news-notices", "https://moics.gov.np/", "https://www.dor.gov.np/", "https://www.pariwartankhabar.com/"]
 
@@ -125,7 +137,7 @@ nepberta_urls = [ "https://ekantipur.com/",  "https://onlinekhabar.com/",  "http
 * 'dainikonline' seems to have been closed or moved somewhere else.
 * latest tweets in their twitter page are from 2019. https://twitter.com/dainikonline2?lang=en
 '''
-nepberta_error_urls  = ["https://dainikonline.com/"]    
+nepberta_error_urls  = ["https://dainikonline.com/"]
 new_urls = []
 
 crawling_completed = ['https://www.hamrakura.com/',  'https://www.bigulnews.com/', 'https://www.baahrakhari.com/',  'https://www.ekantipur.com/',  'https://sancharkendra.com/',  'https://www.realkhabar.net/',  'https://www.nagariknetwork.com/',  'https://www.abhiyandaily.com/',  'https://www.eadarsha.com/',  'https://samacharpati.com/',  'https://www.hamrokhotang.com/',  'https://www.aarthiknews.com_merged_/',  'https://www.kantipath.com/',  'https://www.onlinetvnepal.com/',  'https://www.eadarshhistora.com_merged_/',  'https://www.arghakhanchi.com/',  'https://www.nayapage.com/',  'https://www.radiosagarmatha.org.np/',  'https://www.onsnews.com/',  'https://www.onlinekhabar.com_merged_/',  'https://www.saptahik.com.np/',  'https://www.sancharkendra.com_merged_/',  'https://www.samacharpati.com_merged_/',  'https://www.nepalihimal.com/',  'https://aarthiknews.com/']
@@ -145,19 +157,41 @@ gorkhapatra: it would be nice to crawl pdfs of gorkhapatra
 ```
 
 # Post-Process
-* `python3 post_process.py`
-* to extract nepali paragraphs in csv format from crawled `.json` data.
+
+- `python3 post_process.py`
+- to extract nepali paragraphs in csv format from crawled `.json` data.
 
 ```
 from scrapy_engine.spiders.functions import merge_same_named_json_files
 merge_same_named_json_files(delete_merged=True)
 ```
 
-
 # How to know if crawling is completed for urls?
-* command: `pytho3 resume_incomplete_crawling.py`
-* get resume_urls from crawled data if any
-* and resume crawling
+
+- command: `pytho3 resume_incomplete_crawling.py`
+- get resume_urls from crawled data if any
+- and resume crawling
 
 # Data:
-* [data-crawled-so-far](https://drive.google.com/drive/folders/1v_dv0H56D3J-56VDPIaBkJ601djs8C0w?usp=sharing)
+
+- [data-crawled-so-far](https://drive.google.com/drive/folders/1v_dv0H56D3J-56VDPIaBkJ601djs8C0w?usp=sharing)
+
+# Starting mongo-db
+
+- [tutorials](https://www.mongodb.com/docs/manual/tutorial/)
+- [instructions](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#start-mongodb)
+
+- Start mongo db
+  `sudo systemctl start mongod`
+
+If you receive an error similar to the following when starting mongod: `Failed to start mongod.service: Unit mongod.service not found.`
+
+Run: `sudo systemctl daemon-reload`
+
+Then run the start command above again.
+
+- Verify that MongoDB has started successfully.
+  `sudo systemctl status mongod`
+
+- ensure that MongoDB will start following a system reboot
+  `sudo systemctl enable mongod`
