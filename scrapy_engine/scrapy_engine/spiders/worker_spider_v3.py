@@ -91,7 +91,14 @@ class WorkerSpider(scrapy.Spider):
         site_links = []     # website links
         
         # yield every heading, paragraph from current page
-        headings_and_paragraphs = response.css('h1::text, h2::text, h3::text, h4::text, h5::text, h6::text, p::text').getall()
+        # Extract all text, including from the body and common inline tags
+        # headings_and_paragraphs = response.css('h1::text, h2::text, h3::text, h4::text, h5::text, h6::text, p::text, span::text, div::text').getall()  # , a::text, body *::text'
+        try:
+            headings_and_paragraphs = response.css('h1::text, h2::text, h3::text, h4::text, h5::text, h6::text, p::text, span::text, a::text, div *::text').getall()
+        except Exception as Ex:
+            headings_and_paragraphs = response.css('h1::text, h2::text, h3::text, h4::text, h5::text, h6::text, p::text, span::text, div::text').getall()  # , a::text, body *::text'
+        # headings_and_paragraphs = response.css('*::text').getall()  # This captures text from all elements
+
         if self.crawl_paragraph_data:
             # print('-------------------------------------------------')
             # print(f'\ncrawling paragraph_data: {self.crawl_paragraph_data}')
