@@ -48,7 +48,7 @@ except Exception as ex:
 
 # Update config in mongo
 configs = [
-        {'crawl_other_data': False},
+        {'crawl_other_data': True},
         {'crawl_paragraph_data':True},
         # {'some_config':1000}
     ]
@@ -371,6 +371,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
         if required_to_crawl_count > 0:
             # refill 10000 at a time
             # to avoid max. sized reached error of mongo        
+            print(f'to refill: {required_to_crawl_count} to_crawl urls')
             no_iterations = int(required_to_crawl_count/10000) + 1
             for _ in range(no_iterations):
                 # Get urls from local_mongo
@@ -388,8 +389,11 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                             for entry in to_crawl_entries
                         ],
                         ordered=False)
+                    print(f"attempted inserting {no_iterations*10000} to_crawl to online_mongo")
+                    logging.info(f"attempted inserting {no_iterations*10000} to_crawl to online_mongo")
                 except Exception as bwe:
-                    pass
+                    print(f'failed to refill {required_to_crawl_count} : reason: {ex}')
+                    logging.info(f'failed to refill {required_to_crawl_count} : reason: {ex}')
                 
                 # Update status in local_mongo
                 local_mongo.collection.update_many(
@@ -397,8 +401,7 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                         {'$set': {'status': 'crawling'}}
                     )
             
-            print(f"attempted inserting {no_iterations*10000} to_crawl to online_mongo")
-            logging.info(f"attempted inserting {no_iterations*10000} to_crawl to online_mongo")
+            
             
         # -------------------------------------------------------------------------------------------------------------------------
         # Save error data to csv file from online_mongo

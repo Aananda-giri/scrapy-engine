@@ -21,7 +21,7 @@ from mongo import Mongo
 
 
 class WorkerSpider(scrapy.Spider):
-    name = "worker_spider"
+    name = "worker_spider_v3"
     crawled_data = []
     to_visit = []
     other_data = []

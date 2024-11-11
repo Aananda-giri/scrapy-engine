@@ -6,7 +6,8 @@
 `scrapy crawl worker_spider -o worker_spider.json`
 
 # TODO
-*[ ] https://cmc.edu.np/hospital/doctors/67
+* [ ] Visit any link in given page, continue with other links in that page if the page contains nepali text.
+* [ ] https://cmc.edu.np/hospital/doctors/67
         /worker_spider_v3.py", line 295, in errback_httpbin
         error_data = {'url': failure.request.url, 'timestamp': time.time(), 'status': 'error', 'status_code': response.status, 'error_type': 'Unknown'}
         AttributeError: 'NoneType' object has no attribute 'status'
