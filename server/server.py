@@ -48,7 +48,7 @@ except Exception as ex:
 
 # Update config in mongo
 configs = [
-        {'crawl_other_data': True},
+        {'crawl_other_data': False},
         {'crawl_paragraph_data':True},
         # {'some_config':1000}
     ]
