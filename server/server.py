@@ -21,11 +21,12 @@ load_dotenv()
 import logging
 logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
 
-from bloom import BloomFilterThread
+from bloom import BloomFilterThread, get_bloom_thread
+from functions import is_ignored_url
 
 # load oscar dataset bloom filter (contains urls that are already crawled by oscar_2201 dataset from huggingface)
 npberta_oscar_bloom_filter = BloomFilterThread(save_file='npberta_oscar_bloom_filter.pkl')
-
+crawled_urls_bloom_filter = get_bloom_thread(save_file='crawled_urls_bloom_filter.pkl', scalable=True)
 
 '''
 logging.debug("debug")       # logs all the logs below
@@ -295,9 +296,9 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
                 
                 # Get all urls from "to_crawl?"
                 entries = mongo.collection.find({"status": 'to_crawl?'}).limit(10000)
-                entries = list(entries)
+                entries = [entry for entry in entries if not is_ignored_url(entry['url'])]
                 # making two lists entries and entries_non_crawled in order to save entries_non_crawled to local_mongo and delete all entries from online_mongo
-                entries_non_crawled = [entry for entry in entries if entry['url'] not in npberta_oscar_bloom_filter]
+                entries_non_crawled = [entry for entry in entries if entry['url'] not in crawled_urls_bloom_filter and entry['url'] not in npberta_oscar_bloom_filter]
                 # Save to local mongo
                 # print('pre-insert')
                 start_time = time.time()
@@ -375,7 +376,13 @@ def to_crawl_cleanup_and_mongo_to_crawl_refill():
             no_iterations = int(required_to_crawl_count/10000) + 1
             for _ in range(no_iterations):
                 # Get urls from local_mongo
-                to_crawl_entries = list(local_mongo.collection.find({"status": 'to_crawl'}).limit(10000))
+                to_crawl_entries = list(local_mongo.collection.find({"status": 'to_crawl', "url": {"$not": {"$regex": f"^https?://.*{domain}.*$"}}}).limit(10000))
+                # filter out ignored urls and delete ignored_urls from local_mongo
+                ignored_urls = [entry['url'] for entry in to_crawl_entries if is_ignored_url(entry['url'])]
+                local_mongo.collection.delete_many({"url": {"$in": ignored_urls}})
+
+                # filter to_crawl_entries: is_ignored_url function is not that expensive
+                to_crawl_entries = [entry for entry in to_crawl_entries if not is_ignored_url(entry['url'])]
                 
                 # Insert to online mongo
                 try:
@@ -558,13 +565,21 @@ def save_to_csv(data, data_type="crawled_data"):
                 
                 try:
                     # Get all unique crawled_urls
-                    entries = list(set([data_item['parent_url'] for data_item in data_items]))
+                    newly_crawled_urls = list(set([data_item['parent_url'] for data_item in data_items]))
                     
-                    # update status of parent_url to 'crawled' in local_mongo
-                    local_mongo.collection.update_many(
-                        {'url':{'$in': entries}},
-                        {'$set': {'status': 'crawled'}},
-                    )
+                    # # update status of parent_url to 'crawled' in local_mongo
+                    # local_mongo.collection.update_many(
+                    #     {'url':{'$in': newly_crawled_urls}},
+                    #     {'$set': {'status': 'crawled'}},
+                    # )
+
+                    # Add newly_crawled_urls urls to bloom filter
+                    for url in newly_crawled_urls:
+                        crawled_urls_bloom_filter.add(url)
+                    
+                    # Delete newly_crawled_urls from local_mongo
+                    local_mongo.collection.delete_many({"url": {"$in": newly_crawled_urls}})
+
                     
                     # Save crawled data to csv file
                     csv_writer.writerows(data_items)
