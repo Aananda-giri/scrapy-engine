@@ -2,3 +2,5 @@
 server/.env
 scrapy_engine/scrapy_engine/.env
 scrapy_engine/scrapy_engine/spiders/mongo.py
+*.pickle
+*.zip
