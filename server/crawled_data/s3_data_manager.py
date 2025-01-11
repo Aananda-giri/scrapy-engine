@@ -1,18 +1,25 @@
+from datetime import datetime
+import duckdb
+from huggingface_hub import HfApi
+import logging
 import os
 import sys
-import zipfile
+
 import pickle
 from pathlib import Path
-import requests
-import duckdb
+
 import pandas as pd
-from typing import List, Optional, Dict, Any
-import logging
-from urllib.parse import urlparse
+import requests
+import time
 from tqdm import tqdm
+from typing import List, Optional, Dict, Any
+
+from urllib.parse import urlparse
+
 
 sys.path.append(str(Path('../scrapy_engine/scrapy_engine').resolve()))
 from s3_v2 import Ec2Functions
+import zipfile
 
 class DataProcessor:
     def __init__(self, 
@@ -37,6 +44,9 @@ class DataProcessor:
         
         # Initialize DuckDB connection
         self.db = duckdb.connect(database=':memory:', read_only=False)
+
+        # Initialize the huggingface api
+        self.hf_api = HfApi()
 
     def download_zips(self) -> List[Path]:
         """
@@ -163,7 +173,40 @@ class DataProcessor:
         self.logger.info(f"Successfully processed {total_processed} records to {parquet_path}")
         return parquet_path
 
+    def push_to_hub(self, parquet_file: Path, start_time: Optional[float] = 0.0):
+        '''
+        * condition:
+          - once every 24 hours
+          - once parquet file size is greater than 20Mb
+        '''
+        # 1) calculate file size in Mb
+        parquet_file_size_mb = parquet_file.stat().st_size / (1024 * 1024)
 
+        if parquet_file_size_mb > 20 or (time.time() - start_time) >= 86400:
+            # 24*60*60 = 86400
+            
+            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+            filename_at_hf = f"{uuid.uuid4()}{_timestamp}.pickle"
+            try:
+            
+                # 2) push to hub
+                self.hf_api.upload_file(
+                    path_or_fileobj=parquet_file,
+                    path_in_repo=f'scrapy_engine/raw_parquets/{filename_at_hf}',
+                    repo_id="Aananda-giri/nepali_llm_datasets",
+                    repo_type="dataset",
+                    token=os.getenv('HF_TOKEN')
+                )
+                
+                self.logger.info(f"pushed pickle file to hub {parquet_file} {parquet_file_size_mb}Mb time_spend:{time.time() - start_time}s")
+                
+                # Reset start_time
+                start_time = time.time()
+            except Exception as e:
+                self.logger.error(f"Hugging Face upload failed: {str(e)}")
+        return start_time
+        
+        # return sum(f.stat().st_size / (1024 * 1024) for f in pickle_files)
     def cleanup(self, remove_downloads: bool = False, remove_extracted: bool = True):
         """Clean up temporary files."""
         try:
