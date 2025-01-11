@@ -1,4 +1,4 @@
-from .functions import  load_env_var_in_google_colab, remove_fragments_from_url
+from .functions import  load_env_var_in_google_colab, remove_fragments_from_url, is_same_domain
 
 import scrapy
 import dotenv
@@ -16,15 +16,16 @@ from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutErro
 
 import sys
 
-sys.path.append('../server/')
-from mongo import Mongo
+sys.path.append('../server/../')
+from .mongo import Mongo
+from .pickle_utils import PickleUtils
 
 
 class WorkerSpider(scrapy.Spider):
     name = "worker_spider"
-    crawled_data = []
-    to_visit = []
-    other_data = []
+    # crawled_data = []
+    # to_visit = []
+    # other_data = []
     
             
     def __init__(self, *args, **kwargs):
@@ -50,15 +51,24 @@ class WorkerSpider(scrapy.Spider):
         # print(f'config.crawl_paragraph_data: {self.crawl_paragraph_data}')
         print('------------------------------------')
         
+        
     def start_requests(self):
         # get number of concurrent requests from settings
         n_concurrent_requests = self.crawler.engine.settings.get('CONCURRENT_REQUESTS')
         start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls(n_concurrent_requests)]
+        # start_urls = [
+        #     "https://ekantipur.com/koseli/2025/01/11/prithvi-narayan-shah-some-truth-some-delusion-04-06.html",
+        #     "https://ekantipur.com/photo_feature/2025/01/11/president-places-wreath-at-prithvi-narayans-salik-photos-14-01.html"
+        # ]
+        
         print(f'\n\n start:{start_urls} \n\n')
         for url in start_urls:
             yield scrapy.Request(url, callback=self.parse, errback=self.errback_httpbin)  # , dont_filter=True  : allows visiting same url again
     def parse(self, response):
         if response.status == 200:
+            # 1) Save html content to a pickle file
+            PickleUtils.save_html(response.url, response.body)
+
             # only send same domain links to mongo (if we ever need other links, we can get them from html content later)
             links = LinkExtractor(deny_extensions=[]).extract_links(response)
             
@@ -69,31 +79,32 @@ class WorkerSpider(scrapy.Spider):
                 # print(f' \n muji site link: {site_link.url} \n')
                 # base_url, crawl_it = should_we_crawl_it(site_link.url)  # self.visited_urls_base,
                 de_fragmented_url = remove_fragments_from_url(site_link.url)
-                # only save same domain links
-                if is_same_domain(response.url, de_fragmented_url):
-                    
-                    if len(de_fragmented_url.strip()) > 0 and len(de_fragmented_url) < 250:
-                        # avoid urls with length greater than 1000
-                        the_to_crawl_urls.append(de_fragmented_url)
+                if len(de_fragmented_url.strip()) > 0 and len(de_fragmented_url) < 250:
+                    # avoid urls with length greater than 1000
+                    the_to_crawl_urls.append(de_fragmented_url)
                     
 
-            if the_to_crawl_urls: self.mongo.append_url_to_crawl(the_to_crawl_urls)
+            if the_to_crawl_urls:
+                # self.mongo.append_url_to_crawl(the_to_crawl_urls)
+                print('-'*50, f'to_crawl_urls:{the_to_crawl_urls}','-'*50, )
             
             ''' Note:
                 If a url redirects to another url, then the original url is added to visited urls so as to not to visit it again.
                 redirected url is sent via crawled_data and other_data then update visited_url.
             '''
 
+            
             # Keep the worker buisy by getting new urls to crawl
             # Get few more start urls to crawl next
             number_of_new_urls_required = self.crawler.engine.settings.get('CONCURRENT_REQUESTS') - len(self.crawler.engine.slot.inprogress)
             if number_of_new_urls_required > 0:
                 n_concurrent_requests = self.crawler.engine.settings.get('CONCURRENT_REQUESTS')
-                fetched_start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls(n_concurrent_requests)]
+                fetched_start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls(number_of_new_urls_required)]
                 if fetched_start_urls:
                     for url in fetched_start_urls:
                             # if url not in self.visited_urls:visited_urls.add(url)  # not necessary as we are fetching from mongo (filtered by server)
                             yield scrapy.Request(url, callback=self.parse)
+            
         else:
             pass
             # save status to mongo

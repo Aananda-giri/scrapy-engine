@@ -13,6 +13,21 @@ SPIDER_MODULES = ["scrapy_engine.spiders"]
 NEWSPIDER_MODULE = "scrapy_engine.spiders"
 
 
+# ============================================
+# To upload crawled data to hf or s3
+EXTENSIONS = {
+    'scrapy_engine.extensions.BackgroundUploadExtension': 100,  # number determines load order
+}
+
+
+# Optional settings for the upload service
+PICKLE_DIR = './pickles'
+UPLOAD_SIZE_THRESHOLD_MB = 100.0
+UPLOAD_INTERVAL_SECONDS = 10 # 3600
+CHECK_INTERVAL_SECONDS = 2 # 300
+# ============================================
+
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "scrapy_engine (+http://www.yourdomain.com)"
 

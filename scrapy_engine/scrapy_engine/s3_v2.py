@@ -1,10 +1,14 @@
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
-load_dotenv()
+load_dotenv('.env')
+
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
-print(f'keys available: {AWS_ACCESS_KEY != None and AWS_SECRET_KEY !=None}')
+
+# print(f'keys available: {AWS_ACCESS_KEY != None and AWS_SECRET_KEY !=None}')
+assert AWS_ACCESS_KEY != None, "scrapy_engine/scrapy_engine/s3_v2.py: Aws access key not found"
 
 AWS_REGION="us-east-1"
 s3_bucket_name = "1b-bucket"
@@ -12,33 +16,32 @@ local_file_path = "test.txt"
 name_for_s3 = "test.txt"
 
 import boto3
-def get_s3_client():
-    # print("in main")
-    s3_client=boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY,
-        region_name=AWS_REGION
-    )
-    return s3_client
-    # response = s3_client.list_buckets()
-    # response = s3_client.upload_file(local_file_path, s3_bucket_name, name_for_s3)
-    # print(f"response: {response}")
-
-
 import os, sys
 import boto3
 import asyncio
+from pathlib import Path
 
 class Ec2Functions:
-        
+        @staticmethod
+        def get_s3_client():
+            # print("in main")
+            s3_client=boto3.client(
+                's3',
+                aws_access_key_id=AWS_ACCESS_KEY,
+                aws_secret_access_key=AWS_SECRET_KEY,
+                region_name=AWS_REGION
+            )
+            return s3_client
+            # response = s3_client.list_buckets()
+            # response = s3_client.upload_file(local_file_path, s3_bucket_name, name_for_s3)
+            # print(f"response: {response}")
         async def _upload_file_to_s3(file_path, bucket_name, object_key):
             # Function to upload a file to S3 and return the link
             '''
             object key is the path to the file in the bucket
             '''
             
-            s3_client = get_s3_client()# boto3.client('s3')
+            s3_client = Ec2Functions.get_s3_client()# boto3.client('s3')
             try:
                 s3_client.upload_file(file_path, bucket_name, object_key)
                 # object_url = f"https://{bucket}.s3.{region_name}.amazonaws>
@@ -53,7 +56,9 @@ class Ec2Functions:
                 return None
         
         @staticmethod
-        def upload_file(file_path, bucket_name, object_key):
+        def upload_file(file_path, bucket_name='1b-bucket', object_key=None):
+            if not object_key:
+                object_key = file_path.split('/')[-1]
             url = asyncio.run(Ec2Functions._upload_file_to_s3(file_path, bucket_name, object_key))
             return url
         
@@ -68,7 +73,7 @@ class Ec2Functions:
             if not folder_path:
                 folder_path = '/home/ubuntu/saneora/cogs/downloads'
             if not bucket_name:
-                bucket_name = 'discord-bot'
+                bucket_name = '1b-bucket'
             for root, dirs, files in os.walk(folder_path):
                 for file_name in files:
                     file_path = os.path.join(root, file_name)
@@ -85,11 +90,11 @@ class Ec2Functions:
             return uploaded_files
 
         @staticmethod
-        def list_files(bucket_name=None):
+        def list_files(bucket_name='1b-bucket'):
             # List files in a bucket
             if not bucket_name:
-                bucket_name = 'discord-bot'
-            s3_client = get_s3_client()
+                bucket_name = '1b-bucket'
+            s3_client = Ec2Functions.get_s3_client()
             try:
                 response = s3_client.list_objects(Bucket=bucket_name)
                 file_keys = []  # similar to file paths
@@ -102,7 +107,7 @@ class Ec2Functions:
                         file_keys.append(file['Key'])
                     return file_keys
                 else:
-                    print('No files in the bucket')
+                    print(f'No files in bucket:{bucket_name}')
                     return []
             except Exception as e:
                 print(f"Error listing files in the bucket '{bucket_name}': {e}")
@@ -111,7 +116,7 @@ class Ec2Functions:
         @staticmethod
         def delete_file(bucket_name, object_key):
             # Delete a file from S3
-            s3_client = get_s3_client()
+            s3_client = Ec2Functions.get_s3_client()
             try:
                 response = s3_client.delete_object(Bucket=bucket_name, Key=object_key)
                 print(f"File '{object_key}' deleted from bucket '{bucket_name}'")
@@ -119,14 +124,20 @@ class Ec2Functions:
                 print(f"Error deleting file '{object_key}' from bucket '{bucket_name}': {e}")
 
         @staticmethod
-        def download_file(bucket_name, object_key, file_path):
+        def download_file(object_key,bucket_name='1b-bucket', file_path=None, folder_path=None):
+            if not file_path:
+                file_path = object_key
+            os.makedirs(folder_path, exist_ok=True)
+            file_path = os.path.join(folder_path, file_path)
             # Download a file from s3
-            s3_client = get_s3_client()
+            s3_client = Ec2Functions.get_s3_client()
             try:
                 s3_client.download_file(bucket_name, object_key, file_path)
                 print(f"File '{object_key}' downloaded to '{file_path}'")
+                return Path(file_path)
             except exception as e:
                 print(f'Error downloding file {object_key} from bucket {bucket_name}: {e}')
+                return None
 
 if __name__ == "__main__":
     # take filename from command line
