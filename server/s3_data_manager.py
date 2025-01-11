@@ -18,12 +18,17 @@ class DataProcessor:
     def __init__(self, 
                  download_dir: str = "./downloads",
                  extract_dir: str = "./extracted",
-                 output_dir: str = "./output"):
+                 output_dir: str = "./output",
+                 logger: Optional[logging.Logger] = None
+                 ):
         """Initialize the data processor with configurable directories."""
         self.download_dir = Path(download_dir)
         self.extract_dir = Path(extract_dir)
         self.output_dir = Path(output_dir)
-        self.logger = logging.getLogger(__name__)
+        if logger != None:
+            self.logger = logger
+        else:
+            self.logger = logging.getLogger(__name__)
         
         # Create necessary directories
         self.download_dir.mkdir(exist_ok=True)

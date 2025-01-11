@@ -10,12 +10,14 @@ import os
 from pathlib import Path
 from s3_data_manager import DataProcessor
 import threading
+import logging
 
+logger = logging.getLogger(__name__)
 
 load_dotenv('.env')
 
 def process_crawled_data():
-    dp=DataProcessor()
+    dp=DataProcessor(logger=logger)
     while True:
         # 1) download zip files
         downloaded_files = dp.download_zips()   # e.g. [PosixPath('downloads/a43579c1-17d0-4027-9661-0f30495b4c7b.zip')]
