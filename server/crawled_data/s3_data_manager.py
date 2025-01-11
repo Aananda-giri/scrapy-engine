@@ -187,6 +187,7 @@ class DataProcessor:
             
             timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
             filename_at_hf = f"{uuid.uuid4()}{_timestamp}.pickle"
+            pushed_successfully = True
             try:
             
                 # 2) push to hub
@@ -202,12 +203,14 @@ class DataProcessor:
                 
                 # Reset start_time
                 start_time = time.time()
+                pushed_successfully = True
+                return start_time, pushed_successfully
             except Exception as e:
                 self.logger.error(f"Hugging Face upload failed: {str(e)}")
-        return start_time
+        return start_time, pushed_successfully
         
         # return sum(f.stat().st_size / (1024 * 1024) for f in pickle_files)
-    def cleanup(self, remove_downloads: bool = False, remove_extracted: bool = True):
+    def cleanup(self, remove_downloads: bool = False, remove_extracted: bool = True, remove_parquet:bool = True):
         """Clean up temporary files."""
         try:
             if remove_downloads:
@@ -219,6 +222,10 @@ class DataProcessor:
                 for file in self.extract_dir.glob('*.pickle'):
                     file.unlink()
                 self.logger.info("Removed extracted pickle files")
+            if remove_parquet:
+                for file in self.output_dir.glob('*.parquet'):
+                    file.unlink()
+                self.logger.info("Removed parquet files")
                 
         except Exception as e:
             self.logger.error(f"Cleanup failed: {str(e)}")
