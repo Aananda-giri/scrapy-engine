@@ -1,9 +1,9 @@
-.env
-server/.env
-scrapy_engine/scrapy_engine/.env
+# Ignore all .env files
+**/.env
+
 scrapy_engine/scrapy_engine/spiders/mongo.py
-*.pickle
-*.zip
+**.pickle
+**.zip
 server_old/*
 todo-scrapy/*
 
