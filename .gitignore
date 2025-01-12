@@ -1,6 +1,9 @@
 # Ignore all .env files
 **/.env
 
+# Ignore all pycache folder content
+**__pycache__/
+
 scrapy_engine/scrapy_engine/spiders/mongo.py
 **.pickle
 **.zip
@@ -10,3 +13,5 @@ todo-scrapy/*
 server/output/*
 server/extracted/*
 server/downloads/*
+
+servers/urls/the_plan.ipynb
