@@ -23,8 +23,8 @@ EXTENSIONS = {
 # Optional settings for the upload service
 PICKLE_DIR = './pickles'
 UPLOAD_SIZE_THRESHOLD_MB = 100.0
-UPLOAD_INTERVAL_SECONDS = 10 # 3600
-CHECK_INTERVAL_SECONDS = 2 # 300
+UPLOAD_INTERVAL_SECONDS = 3600 # 10 # 1hr is equivaline to 3600 seconds
+CHECK_INTERVAL_SECONDS = 300 # 2    # 5 minutes
 # ============================================
 
 

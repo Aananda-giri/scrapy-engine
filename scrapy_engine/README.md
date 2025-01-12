@@ -1,6 +1,8 @@
-[] post-process: if crawled data is str: make it list
-[] upload code to zyte
-[X] drive rename spider to worker_spider
+# working:
+
+- get urls to_crawl from mongo
+- visit urls, save content to .pickle file
+- make zip out of those pickle files and save to s3 (if error occured, save to hf)
 
 # To run the code
 

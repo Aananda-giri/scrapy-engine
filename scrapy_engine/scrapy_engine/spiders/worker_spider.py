@@ -1,4 +1,5 @@
 from .functions import  load_env_var_in_google_colab, remove_fragments_from_url, is_same_domain
+from .urls_filter import WebPageURLFilter
 
 import scrapy
 import dotenv
@@ -32,6 +33,9 @@ class WorkerSpider(scrapy.Spider):
         # load environment variables if running in google colab
         load_env_var_in_google_colab()
         # dotenv.load_dotenv("server/.env")
+        
+        # to filter urls that are not likely web pages
+        self.webpage_filter = WebPageURLFilter()
 
         # super(EkantipurSpider, self).__init__(*args, **kwargs)
         self.mongo = Mongo()
@@ -65,28 +69,35 @@ class WorkerSpider(scrapy.Spider):
         for url in start_urls:
             yield scrapy.Request(url, callback=self.parse, errback=self.errback_httpbin)  # , dont_filter=True  : allows visiting same url again
     def parse(self, response):
-        if response.status == 200:
-            # 1) Save html content to a pickle file
-            PickleUtils.save_html(response.url, response.body)
+        if response.status == 200 and 'text/html' in response.headers.get('Content-Type', '').decode('utf-8'):
+            # 1) get redirect_links
 
             # only send same domain links to mongo (if we ever need other links, we can get them from html content later)
             links = LinkExtractor(deny_extensions=[]).extract_links(response)
             
 
             # Next Page to Follow: 
-            the_to_crawl_urls = []    # list for bulk upload
+            redirect_links = []    # list for bulk upload
             for site_link in links:
                 # print(f' \n muji site link: {site_link.url} \n')
                 # base_url, crawl_it = should_we_crawl_it(site_link.url)  # self.visited_urls_base,
                 de_fragmented_url = remove_fragments_from_url(site_link.url)
-                if len(de_fragmented_url.strip()) > 0 and len(de_fragmented_url) < 250:
-                    # avoid urls with length greater than 1000
-                    the_to_crawl_urls.append(de_fragmented_url)
+                                
+                is_likely_a_webpage = self.webpage_filter.is_likely_webpage(site_link.url)
+                if  is_likely_a_webpage and \
+                    len(de_fragmented_url.strip()) > 0 and \
+                    len(de_fragmented_url) < 250 and \
+                    is_same_domain(response.url, de_fragmented_url):
+                        # avoid urls with length greater than 250
+                        redirect_links.append(de_fragmented_url)
                     
+            # print(f'redirect_links:{redirect_links}')
+            # 1) Save html content to a pickle file
+            PickleUtils.save_html(response_url = response.request.url, request_url = response.url, response_body = response.body, redirect_links = redirect_links)
 
-            if the_to_crawl_urls:
-                # self.mongo.append_url_to_crawl(the_to_crawl_urls)
-                print('-'*50, f'to_crawl_urls:{the_to_crawl_urls}','-'*50, )
+            # if redirect_links:
+            #     # self.mongo.append_url_to_crawl(redirect_links)
+            #     print('-'*50, f'to_crawl_urls:{redirect_links}','-'*50, )
             
             ''' Note:
                 If a url redirects to another url, then the original url is added to visited urls so as to not to visit it again.

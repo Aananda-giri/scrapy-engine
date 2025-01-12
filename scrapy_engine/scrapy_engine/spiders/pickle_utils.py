@@ -25,16 +25,22 @@ class PickleUtils:
         return f"{url_hash}_{timestamp}{suffix}"
     
     @staticmethod
-    def save_html(url, html_content, pickle_directory='pickles'):
+    def save_html(response_url, request_url, response_body, redirect_links, pickle_directory='pickles'):
         '''
+
             * save html data in filename: hash(url) + _temp.pickle
             * move _temp.pickle -> pickles/<filename>.pickle
         '''
         # 1) get filename
-        filename = PickleUtils._get_file_name(url)
+        filename = PickleUtils._get_file_name(response_url)
         
         # 2) save data to <filename>_temp.pickle
-        data = {'url':url, 'html_content':html_content}
+        data = {
+            'request_url':request_url,
+            'response_url':response_url,
+            'response_body':response_body,
+            'redirect_links':redirect_links
+            }
         # save to pickle file
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
