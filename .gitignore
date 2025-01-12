@@ -4,6 +4,10 @@
 # Ignore all pycache folder content
 **__pycache__/
 
+**downloads/
+**extracted/
+**output/
+
 scrapy_engine/scrapy_engine/spiders/mongo.py
 **.pickle
 **.zip
