@@ -1,8 +1,4 @@
 from urllib.parse import urlparse
-def is_same_domain(url1, url2):
-  return urlparse(url1).netloc == urlparse(url2).netloc
-
-
 import langid
 import re
 import os, sys, json, csv
@@ -10,6 +6,17 @@ import os, sys, json, csv
 
 # import pybloom_live
 from pathlib import Path
+
+import tldextract
+
+def is_same_domain(url1, url2):
+    domain1 = tldextract.extract(url1).registered_domain
+    domain2 = tldextract.extract(url2).registered_domain
+    return domain1 == domain2
+
+# print(is_same_domain("https://ekagaj.com/", "https://en.ekagaj.com/"))  # True
+# print(is_same_domain("https://ekagaj.com/", "https://example.com/"))   # False
+
 
 
 def is_valid_text_naive(text):
