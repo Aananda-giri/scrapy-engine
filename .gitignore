@@ -8,6 +8,12 @@
 **extracted/
 **output/
 
+# ignore csv, pickle and zip files
+**.csv
+**.pickle
+**.pkl
+**.zip
+
 scrapy_engine/scrapy_engine/spiders/mongo.py
 **.pickle
 **.zip
