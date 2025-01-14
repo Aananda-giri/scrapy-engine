@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Links</title>
+  </head>
+  <body>
+    <h1>Test Links</h1>
+
+    <ul>
+      <li><a href="/page1">Page 1</a></li>
+      <li><a href="/page2">Page 2</a></li>
+      <li>
+        <a href="/page3?param1=value1&param2=value2">Page 3 with Params</a>
+      </li>
+      <li><a href="/nested/page4">Nested Page 4</a></li>
+      <li><a href="/page5#section1">Page 5 with Hash</a></li>
+      <li>
+        <a href="//otherdomain.com/page6"
+          >External Link (Should be ignored by Scrapy if configured)</a
+        >
+      </li>
+      <li><a href="relative/path/page7">Relative Path</a></li>
+    </ul>
+
+    <p>Some other content on the page.</p>
+
+    <div id="footer">
+      <a href="/footer_link">Footer Link</a>
+    </div>
+  </body>
+</html>
