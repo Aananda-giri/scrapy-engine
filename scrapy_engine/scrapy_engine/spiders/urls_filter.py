@@ -2,11 +2,114 @@ from urllib.parse import urlparse
 import re
 from typing import List, Set
 
+from typing import Optional
+import re
+import tldextract
+
+class NepaliUrlValidator:
+    def __init__(self):
+        '''
+            pre-defined site specific patterns/rules for inentifying Nepali content
+            e.g. bbc only contains nepali content under /nepali section
+
+            # format for site_patterns
+            {
+                <tldextract.extract(url).registered_domain>: [<site_pattern1>, <site_pattern2>, ...],
+                ...
+            }
+
+            
+            # Patterns match using regex
+
+            pattern: 
+                (?!...) syntax means NOT operation of reges inside the brackets
+                ^ is start of the string
+                $ is end of string
+                .* matches any character 0 or more times
+                \/ is / <forward slash> with escape_character \  <backward slash> in front
+                \. is . <dot> with escape_character \  <backward slash> in front
+        '''
+        # Define patterns for different news sites
+        # Format: {domain: [pattern1, pattern2, ...]}
+        self.site_patterns = {
+            'bbc.co.uk': [
+                r'^.*\/nepali\/.*$'
+                # r'/nepali(?:/|$)'
+            ],
+            "ekagaj.com": [r'^(?!.*en\.).*$'],          # avoid https://en.ekagaj.com/
+            "himalpress.com": [r'^(?!.*en\.).*$'],  # avoid # avoid https://en.himalpress.com/govt-spent-rs-107-66-billion-on-agriculture-subsidies-in-past-five-years/
+            "nepalbahas.com": [r'^(?!.*en\.).*$'],
+            "nayapage.com": [r'^(?!.*en\.).*$'],
+            "nepalkhabar.com": [r'^(?!.*en\.).*$'],
+            "setopati.com": [r'^(?!.*en\.).*$'],
+            
+            "nepalgunjnews.com": [r'^(?!.*\/english\/).*$'],                      # avoid https://www.nepalgunjnews.com/english/20230868906/
+            "bbc.com": [r'^.*\/nepali\/.*$'],                                     # only follow /nepali ()
+            
+            "deshsanchar.com": [r'^(?!.*\/english\.).*$'],   # avoid https://english.deshsanchar.com/nepal-india-jbf-meeting-emphasis-on-expansion-of-bilateral-trade/
+            "aarthiknews.com": [r'^(?!.*\/english\.).*$'],   # avoid https://english.aarthiknews.com/news/detail/17669/
+            "corporatenepal.com": [r'^(?!.*\/english\.).*$'], # avoid https://english.merolifestyle.com/?p=2192
+            "nepalpage.com": [r'^(?!.*\/english\.).*$'],           # avoid https://english.nepalpage.com/2022/12/like-walking-on-missiles-us-airman-recalls-the-horror-of-the-vietnam-christmas-bombings-50-years-on/
+            "lokaantar.com": [r'^(?!.*\/english\.).*$'],           # avoid https://english.lokaantar.com/news/detail/33475/
+            "dhangadhikhabar.com": [r'^(?!.*\/english\.).*$'],   # avoid https://english.dhangadhikhabar.com/news/73691
+            "khabarhub.com": [r'^(?!.*\/english\.).*$'],               # avoid https://english.khabarhub.com/2025/12/427719/
+            "pardafas.com": [r'^(?!.*\/english\.).*$'],
+            "makalukhabar.com": [r'^(?!.*\/english\.).*$'],
+            "kathmandupati.com": [r'^(?!.*\/english\.).*$'],
+            "annapurnapost.com": [r'^(?!.*\/english\.).*$'],
+            "madheshvani.com": [r'^(?!.*\/english\.).*$'],
+            "nepalwatch.com": [r'^(?!.*\/english\.).*$'],
+            "dcnepal.com": [r'^(?!.*\/english\.).*$'],
+            "karobardaily.com": [r'^(?!.*\/english\.).*$']
+        }
+    
+    def is_probable_nepali_content_url(self, url: str) -> bool:
+        """
+        Check if the given URL contains Nepali content based on predefined patterns.
+        return True if url is not in predefined patterns
+        Args:
+            url (str): The URL to check
+            
+        Returns:
+            bool: whether it is a probable Nepali content URL, None otherwise
+        """
+        try:
+            domain = tldextract.extract(url).registered_domain
+
+            # First check if we have patterns for this domain
+            if domain in self.site_patterns:
+                # print(f' domain: {domain}, path:{path}')
+                # Check if URL matches any of the site's Nepali content patterns
+                for pattern in self.site_patterns[domain]:
+                    if re.search(pattern, url):
+                        return True
+                    else:
+                        return False
+            else:
+                # print(f'patterns not defined for {domain}')
+                # If no patterns are defined, return True (probable nepali content)
+                return True
+        except Exception as e:
+            print(f"Error processing URL {url}: {str(e)}")
+            return None
+    
+    def get_all_sites(self) -> List[str]:
+        """
+        Get list of all supported sites.
+        
+        Returns:
+            List[str]: List of supported netlocs
+        """
+        return list(self.site_patterns.keys())
+
+
 class WebPageURLFilter:
     '''
     * we do not want to crawl image/other file urls (i.e. urls that are not likely to contain html content)
     '''
     def __init__(self):
+        self.nepali_url_validator = NepaliUrlValidator()
+
         # Common file extensions that typically don't contain useful text
         self.non_webpage_extensions: Set[str] = {
             # Images
@@ -142,7 +245,7 @@ class WebPageURLFilter:
                 if len(part) > 30 and re.match(r'^[A-Za-z0-9+/]+={0,2}$', part):
                     return False
             
-            return True
+            return self.nepali_url_validator.is_probable_nepali_content_url(url)
             
         except Exception:
             return False
