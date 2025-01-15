@@ -92,8 +92,17 @@ class WorkerSpider(scrapy.Spider):
                         redirect_links.append(de_fragmented_url)
                     
             # print(f'redirect_links:{redirect_links}')
-            # 1) Save html content to a pickle file
-            PickleUtils.save_html(response_url = response.request.url, request_url = response.url, response_body = response.body, redirect_links = redirect_links)
+            
+            # limit html size
+            MAX_HTML_SIZE = 5 * 1024 * 1024  # 5 MB
+
+            if len(response.body) > MAX_HTML_SIZE:
+                # Optionally log or handle oversized responses
+                self.logger.warning(f"Skipped {response.url} as it exceeds the maximum size of {MAX_HTML_SIZE} bytes.")
+            else:
+                #  ignore content that exceeds MAX_HTML_SIZE rather than truncating it to preserve the HTML Integrity 
+                # 1) Save html content to a pickle file
+                PickleUtils.save_html(response_url = response.request.url, request_url = response.url, response_body = response.body, redirect_links = redirect_links)
 
             # if redirect_links:
             #     # self.mongo.append_url_to_crawl(redirect_links)
