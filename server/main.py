@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 
 # run_crawled_data_server(mongo_db.collection, logger)
 
-url_server_thread = threading.Thread(target=process_crawled_data, args=(mongo_db.collection, logger), name='CrawledDataThread')
-crawled_data_server_thread = threading.Thread(target=process_crawled_data, args=(mongo_db.collection, logger), name='CrawledDataThread')
-
+url_server_thread = threading.Thread(target=run_crawled_data_server, args=(mongo_db.collection, logger), name='CrawledDataThread')
 crawled_data_thread.daemon = True
 crawled_data_thread.start()
 
+crawled_data_server_thread = threading.Thread(target=run_url_server, args=(mongo_db.collection, logger), name='URLServerThread')
 url_server_thread.daemon = True
 url_server_thread.start()

@@ -63,6 +63,10 @@ class DataProcessor:
         # self.mongo = Mongo()
         self.collection = collection
 
+        os.makedirs(download_dir, exist_ok=True)
+        os.makedirs(extract_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
+
     def download_zips(self) -> List[Path]:
         """
         Download zip files from s3 bucket: '1b-bucket'.

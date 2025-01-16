@@ -35,10 +35,12 @@ class URLManager:
         # self.crawled_bloom = get_bloom_thread(save_file='crawled_bloom_filter.pkl', scalable=True)
         self.error_bloom = get_bloom_thread(save_file='error_bloom_filter.pkl', scalable=True)
 
-        self.error_csv_path = Path('error_data.csv')
+        self.error_csv_path = Path('output/error_data/error_data.csv')
         
         # Create local storage directory if it doesn't exist
         os.makedirs(local_storage_path, exist_ok=True)
+        os.makedirs(Path('output/error_data'), exist_ok=True)
+
 
     def add_url_to_mongo(self, url: str) -> bool:
         """Add a new URL to crawl if it hasn't been crawled or errored before."""
@@ -197,39 +199,39 @@ class URLManager:
             # Remove saved URLs from MongoDB
             url_ids = [doc["_id"] for doc in urls_to_save]
             self.collection.delete_many({"_id": {"$in": url_ids}})
-def _load_from_local_storage(self) -> int:
-        """
-        Load URLs from oldest file in local storage to MongoDB.
-        
-        Returns:
-            int: Number of URLs loaded to MongoDB
-        """
-        storage_path = Path(self.local_storage_path)
-        storage_files = list(storage_path.glob('*.json'))
-        
-        if not storage_files:
-            self.logger.info("No files found in local storage")
-            return 0
+    def _load_from_local_storage(self) -> int:
+            """
+            Load URLs from oldest file in local storage to MongoDB.
             
-        try:
-            # Load from oldest file first
-            oldest_file = min(storage_files)
+            Returns:
+                int: Number of URLs loaded to MongoDB
+            """
+            storage_path = Path(self.local_storage_path)
+            storage_files = list(storage_path.glob('*.json'))
             
-            with oldest_file.open('r') as f:
-                urls = json.load(f)
-            
-            if urls:
-                result = self.collection.insert_many(urls, ordered=False)
-                inserted_count = len(result.inserted_ids)
-                self.logger.info(f"Loaded {inserted_count} URLs from {oldest_file}")
-            
-            # Remove the processed file
-            oldest_file.unlink()
-            return len(urls) if urls else 0
-            
-        except Exception as e:
-            self.logger.error(f"Error loading from local storage: {str(e)}")
-            raise
+            if not storage_files:
+                self.logger.info("No files found in local storage")
+                return 0
+                
+            try:
+                # Load from oldest file first
+                oldest_file = min(storage_files)
+                
+                with oldest_file.open('r') as f:
+                    urls = json.load(f)
+                
+                if urls:
+                    result = self.collection.insert_many(urls, ordered=False)
+                    inserted_count = len(result.inserted_ids)
+                    self.logger.info(f"Loaded {inserted_count} URLs from {oldest_file}")
+                
+                # Remove the processed file
+                oldest_file.unlink()
+                return len(urls) if urls else 0
+                
+            except Exception as e:
+                self.logger.error(f"Error loading from local storage: {str(e)}")
+                raise
     
     
     def _append_error_links_to_csv(self, urls: List[Dict[str, Any]]) -> None:
@@ -309,7 +311,31 @@ def _load_from_local_storage(self) -> int:
         except Exception as e:
             self.logger.error(f"Error saving error data: {str(e)}")
             raise
-        
+    def push_error_files_to_hub(self):
+        # 1) calculate file size in Mb
+        error_file_size_mb = self.error_csv_path.stat().st_size / (1024 * 1024)
+
+        if error_file_size_mb > 20:
+            # 24*60*60 = 86400
+            
+            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+            filename_at_hf = f"{uuid.uuid4()}{_timestamp}.csv"
+            pushed_successfully = True
+            try:
+            
+                # 2) push to hub
+                self.hf_api.upload_file(
+                    path_or_fileobj=self.error_csv_path,
+                    path_in_repo=f'scrapy_engine/error_files/{filename_at_hf}',
+                    repo_id="Aananda-giri/nepali_llm_datasets",
+                    repo_type="dataset",
+                    token=os.getenv('HF_TOKEN')
+                )
+                self.logger.info(f"pushed error data file to hub {self.error_csv_path} {parquet_file_size_mb}Mb ")
+                
+            except Exception as e:
+                self.logger.error(f"Hugging Face upload failed: {str(e)}")
+
     def mongo_to_crawl_refill(self):
         '''
         * list of redirect urls (from crawled_data) are saved in multiple pickle_files @ `output/redirect_links`
@@ -423,7 +449,6 @@ def run_url_server(collection, logger):
     """Main crawler loop."""
     
     url_manager = URLManager(collection = collection, logger=logger)  # Using your existing MongoDB collection
-
     while True:
         try:
             # # load urls from .pickle files at `output/redirect_links``
@@ -434,7 +459,10 @@ def run_url_server(collection, logger):
             url_manager.check_timeout_urls()
 
             # save_error_data_from_mongo
-            save_error_data_from_mongo()
+            url_manager.save_error_data_from_mongo()
+
+            # push error file to hub if size>20Mb
+            url_manager.push_error_files_to_hub()
 
             # (no longer needed: selective upload by `mongo_to_crawl_refill` should do) 
             # url_manager.manage_storage()
