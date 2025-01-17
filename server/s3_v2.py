@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 
-load_dotenv(str(Path('../../.env').resolve()))
+load_dotenv('.env')
 
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')

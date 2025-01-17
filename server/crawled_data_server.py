@@ -34,11 +34,10 @@ from mongo import Mongo
 class DataProcessor:
     def __init__(self,
                 collection, 
-                logger, 
+                logger: Optional[logging.Logger] = None,
                 download_dir: str = "./downloads",
                 extract_dir: str = "./extracted",
                 output_dir: str = "./output",
-                logger: Optional[logging.Logger] = None
         ):
         """Initialize the data processor with configurable directories."""
         self.download_dir = Path(download_dir)
@@ -78,14 +77,17 @@ class DataProcessor:
         files_list = ec2_functions.list_files()
         # ec2_functions.upload_file('a43579c1-17d0-4027-9661-0f30495b4c7b.zip')
 
+        downloaded_zip_files = []
         for file_name in files_list:
-            downloaded_zip_files = []
             if file_name.endswith('zip'):
                 # ec2_functions.download_file('a43579c1-17d0-4027-9661-0f30495b4c7b.zip', folder_path='downloads')
                 download_path = ec2_functions.download_file(file_name, folder_path=self.download_dir)
                 if download_path:
                     downloaded_zip_files.append(download_path)
                     self.logger.info(f"Successfully downloaded: {file_name}")
+
+                    # delete from ec2
+                    ec2_functions.delete_file('1b-bucket', file_name)
                 else:
                     self.logger.info(f'failed to download {file_name}')
         return downloaded_zip_files
@@ -232,13 +234,13 @@ class DataProcessor:
         '''
         # 1) calculate file size in Mb
         parquet_file_size_mb = parquet_file.stat().st_size / (1024 * 1024)
+        pushed_successfully = False
 
         if parquet_file_size_mb > 20 or (time.time() - start_time) >= 86400:
             # 24*60*60 = 86400
             
             timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
             filename_at_hf = f"{uuid.uuid4()}{_timestamp}.pickle"
-            pushed_successfully = True
             try:
             
                 # 2) push to hub
@@ -374,30 +376,32 @@ def run_crawled_data_server(collection, logger):
 
     while True:
         # 1) download zip files
-        # downloaded_files = dp.download_zips()   # e.g. [PosixPath('downloads/a43579c1-17d0-4027-9661-0f30495b4c7b.zip')]
+        downloaded_files = dp.download_zips()   # e.g. [PosixPath('downloads/a43579c1-17d0-4027-9661-0f30495b4c7b.zip')]
         
-        # uncomment + rename zip file to debug
-        downloaded_files =[ Path('downloads/d923cd47-c425-4eef-8cc8-e7bbe80bc432.zip')]
+        # # uncomment + rename zip file to debug
+        # downloaded_files =[ Path('downloads/d923cd47-c425-4eef-8cc8-e7bbe80bc432.zip')]
         
         # 2) extract zip files
-        extracted_files = dp.extract_zips(downloaded_files)
+        if downloaded_files:
+            extracted_files = dp.extract_zips(downloaded_files)
 
-        # 3) process pickle files to parquet
-        parquet_file = dp.process_pickles_to_parquet()
+            # 3) process pickle files to parquet
+            parquet_file, redirect_links_dir = dp.process_pickles_to_parquet()
         
-        # # 4) push to hub once every 24 hours or once parquet file size is greater than 20Mb
-        start_time, successfully_pushed_to_hub = dp.push_to_hub(parquet_file, start_time)
+            # # 4) push to hub once every 24 hours or once parquet file size is greater than 20Mb
+            start_time, successfully_pushed_to_hub = dp.push_to_hub(parquet_file, start_time)
 
-        # # # uncomment for testing
-        # 5) convert parquet to csv
-        # dp.parquet_to_csv()
-        # dp.pickle_to_txt(Path('./output/redirect_links'))
+            # # # uncomment for testing
+            # 5) convert parquet to csv
+            # dp.parquet_to_csv()
+            # dp.pickle_to_txt(Path('./output/redirect_links'))
 
-        # # # 6) cleanup
-        dp.cleanup(remove_downloads=True, remove_extracted=True, remove_parquet = successfully_pushed_to_hub)
+            # # # 6) cleanup
+            dp.cleanup(remove_downloads=True, remove_extracted=True, remove_parquet = successfully_pushed_to_hub)
 
-        # sleep for 2 minutes
-        time.sleep(120)
+        time.sleep(120) # sleep for 2 minutes
+        
+        
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
@@ -410,7 +414,7 @@ if __name__ == "__main__":
     extracted_files = dp.extract_zips(downloaded_files)
 
     # 3) process pickle files to parquet
-    parquet_file = dp.process_pickles_to_parquet()
+    parquet_file, redirect_links_dir = dp.process_pickles_to_parquet()
 
     # 4) cleanup
     dp.cleanup(remove_downloads=True, remove_extracted=True)

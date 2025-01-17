@@ -1,29 +1,33 @@
-import time
-import json
-from typing import List, Optional
-from datetime import datetime, timedelta
-import os
-
 from bloom import get_bloom_thread
-import logging
 
+import csv
+from datetime import datetime, timedelta
+import json
+import logging
 from mongo import Mongo
+import os
 from pathlib import Path
 import pickle
-
+import time
+from typing import List, Dict, Optional, Any
 
 class URLManager:
-    def __init__(self, collection, logger, local_storage_path: str = "local_storage",
-                 max_mongo_urls: int = 300_000, min_mongo_urls: int = 200_000,
-                 batch_size: int = 100_000,
-                 output_dir: str = "./output",):
+    def __init__(self,
+            collection, logger,
+            error_bloom,
+            to_crawl_bloom,
+            local_storage_path: str = "local_storage",
+            max_mongo_urls: int = 300_000, min_mongo_urls: int = 200_000,
+            batch_size: int = 100_000,
+            output_dir: str = "./output",
+        ):
         
         if logger != None:
             self.logger = logger
         else:
             self.logger = logging.getLogger(__name__)
         self.output_dir = Path("./output")
-        self.redirect_links_dir = Path(output_dir / "redirect_links").resolve()  # Resolve to absolute path
+        self.redirect_links_dir = Path(self.output_dir / "redirect_links").resolve()  # Resolve to absolute path
 
         self.collection = collection
         self.local_storage_path = local_storage_path
@@ -31,9 +35,12 @@ class URLManager:
         self.min_mongo_urls = min_mongo_urls
         self.batch_size = batch_size
         
-        self.to_crawl_bloom = get_bloom_thread(save_file='to_crawl_bloom_filter.pkl', scalable=True) 
+        self.error_bloom = error_bloom
+        self.to_crawl_bloom = to_crawl_bloom
         # self.crawled_bloom = get_bloom_thread(save_file='crawled_bloom_filter.pkl', scalable=True)
-        self.error_bloom = get_bloom_thread(save_file='error_bloom_filter.pkl', scalable=True)
+        
+        
+
 
         self.error_csv_path = Path('output/error_data/error_data.csv')
         
@@ -313,7 +320,7 @@ class URLManager:
             raise
     def push_error_files_to_hub(self):
         # 1) calculate file size in Mb
-        error_file_size_mb = self.error_csv_path.stat().st_size / (1024 * 1024)
+        error_file_size_mb = self.error_csv_path.stat().st_size / (1024 * 1024) if self.error_csv_path.exists() else 0
 
         if error_file_size_mb > 20:
             # 24*60*60 = 86400
@@ -356,16 +363,20 @@ class URLManager:
         mongo_urls_count = self.collection.count_documents({})
         if mongo_urls_count > self.min_mongo_urls:
             # mongo have enough urls to crawl (no need for new to_crawl urls)
+            # print('mongo already filled.')
             return 0
 
         # new links uploaded to mongo
         required_new_url_count = self.min_mongo_urls -  mongo_urls_count
+        # print(f'required: {required_new_url_count}')
         
         # 1) Get all non-temporary pickle files
         pickle_files = [
             f for f in self.redirect_links_dir.glob("*.pickle")
             if not f.name.endswith("_temp.pickle")
         ]
+        # print(f'pickle_files:{pickle_files}')
+
         pickle_files_loaded = []    # to delete later
         if not pickle_files:
             self.logger.info("mongo_to_crawl_refill: No pickle files found to process")
@@ -386,12 +397,14 @@ class URLManager:
                         if link not in self.error_bloom
                         and link not in self.to_crawl_bloom
                     }
+                    # print(f'new_links: {new_links}')
 
                     # 2.5) Update bloom filters with new links
                     for link in new_links:
                         self.to_crawl_bloom.add(link)
                     
                     links_to_crawl.update(new_links)
+                    # print(f'links_to_crawl: {links_to_crawl}')
 
                     # update loaded pickle files
                     pickle_files_loaded.append(pickle_path)
@@ -438,17 +451,17 @@ class URLManager:
         # Clean up processed pickle files (only remove pickle_files_loaded
         for pickle_path in pickle_files_loaded:
             try:
-                os.remove(pickle_file)
+                os.remove(pickle_path)
                 # pickle_path.unlink()
             except Exception as e:
-                self.logger.error(f"Failed to remove {pickle_path}: {str(e)}")
+                self.logger.error(f"url_server(l.452):Failed to remove {pickle_path}: {str(e)}")
         
         return len(links_to_crawl)
 
-def run_url_server(collection, logger):
+def run_url_server(collection, logger, error_bloom, to_crawl_bloom):
     """Main crawler loop."""
     
-    url_manager = URLManager(collection = collection, logger=logger)  # Using your existing MongoDB collection
+    url_manager = URLManager(collection = collection, logger=logger, error_bloom=error_bloom, to_crawl_bloom=to_crawl_bloom)  # Using your existing MongoDB collection
     while True:
         try:
             # # load urls from .pickle files at `output/redirect_links``
