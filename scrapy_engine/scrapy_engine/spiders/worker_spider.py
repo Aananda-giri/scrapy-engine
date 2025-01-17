@@ -17,9 +17,10 @@ from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutErro
 
 import sys
 
+from .pickle_utils import PickleUtils
 sys.path.append('../server/../')
 from .mongo import Mongo
-from .pickle_utils import PickleUtils
+
 
 
 class WorkerSpider(scrapy.Spider):
@@ -59,21 +60,44 @@ class WorkerSpider(scrapy.Spider):
     def start_requests(self):
         # get number of concurrent requests from settings
         n_concurrent_requests = self.crawler.engine.settings.get('CONCURRENT_REQUESTS')
+        
+        # Comment to debug
         start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls(n_concurrent_requests)]
+        
+        # uncomment to debug
         # start_urls = [
+            # 'https://www.ukaalo.com/',
         #     "https://ekantipur.com/koseli/2025/01/11/prithvi-narayan-shah-some-truth-some-delusion-04-06.html",
         #     "https://ekantipur.com/photo_feature/2025/01/11/president-places-wreath-at-prithvi-narayans-salik-photos-14-01.html"
         # ]
         
         print(f'\n\n start:{start_urls} \n\n')
+        start_urls = [remove_fragments_from_url(data_item['url']) for data_item in self.mongo.fetch_start_urls(n_concurrent_requests)]
         for url in start_urls:
             yield scrapy.Request(url, callback=self.parse, errback=self.errback_httpbin)  # , dont_filter=True  : allows visiting same url again
     def parse(self, response):
+        '''
+        * `response.body` is in binary format and
+        * `response.text` is in (human readable) text based format.
+        '''
+
         if response.status == 200 and 'text/html' in response.headers.get('Content-Type', '').decode('utf-8'):
             # 1) get redirect_links
 
             # only send same domain links to mongo (if we ever need other links, we can get them from html content later)
-            links = LinkExtractor(deny_extensions=[]).extract_links(response)
+            '''
+                linkextractors is giving 0 links for sites like:`http://deshsanchar.com`
+                so combining linkextractor with bss4
+                from scrapy.linkextractors import LinkExtractor
+                links = LinkExtractor(deny_extensions=[]).extract_links(response)
+                print(len(links))
+            '''
+            from bs4 import BeautifulSoup
+            soup_links=[]
+            try:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                soup_links = [link['href'] for link in soup.find_all('a', href=True)]
+            links = list(set(LinkExtractor(deny_extensions=[]).extract_links(response) + soup_links))
             
 
             # Next Page to Follow: 
@@ -90,19 +114,22 @@ class WorkerSpider(scrapy.Spider):
                     is_same_domain(response.url, de_fragmented_url):
                         # avoid urls with length greater than 250
                         redirect_links.append(de_fragmented_url)
-                    
+            
+            # uncomment to debug    
             # print(f'redirect_links:{redirect_links}')
             
             # limit html size
             MAX_HTML_SIZE = 5 * 1024 * 1024  # 5 MB
+            print(f'url:{response.url}\n redirect_links: {len(redirect_links)} \n valid-content-len.{len(response.text) < MAX_HTML_SIZE}')
 
-            if len(response.body) > MAX_HTML_SIZE:
+            # Comment to debug
+            if len(response.text) > MAX_HTML_SIZE:
                 # Optionally log or handle oversized responses
                 self.logger.warning(f"Skipped {response.url} as it exceeds the maximum size of {MAX_HTML_SIZE} bytes.")
             else:
                 #  ignore content that exceeds MAX_HTML_SIZE rather than truncating it to preserve the HTML Integrity 
                 # 1) Save html content to a pickle file
-                PickleUtils.save_html(response_url = response.request.url, request_url = response.url, response_body = response.body, redirect_links = redirect_links)
+                PickleUtils.save_html(response_url = response.request.url, request_url = response.url, response_body = response.text, redirect_links = redirect_links)
 
             # if redirect_links:
             #     # self.mongo.append_url_to_crawl(redirect_links)
@@ -114,8 +141,10 @@ class WorkerSpider(scrapy.Spider):
             '''
 
             
+            
             # Keep the worker buisy by getting new urls to crawl
             # Get few more start urls to crawl next
+            # Comment to debug
             number_of_new_urls_required = self.crawler.engine.settings.get('CONCURRENT_REQUESTS') - len(self.crawler.engine.slot.inprogress)
             if number_of_new_urls_required > 0:
                 n_concurrent_requests = self.crawler.engine.settings.get('CONCURRENT_REQUESTS')
