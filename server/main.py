@@ -4,9 +4,13 @@ from crawled_data_server import run_crawled_data_server
 
 import threading
 
+from add_start_urls import add_start_urls
+
 mongo_db = Mongo()
 logger = logging.getLogger(__name__)
 
+# add start urls to to_crawl_urls
+add_start_urls(include_our_unique=True, include_nepberta_unique=False, include_iriis_unique=False)
 
 
 # run_url_server(mongo_db.collection, logger)
