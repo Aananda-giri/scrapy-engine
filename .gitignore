@@ -11,8 +11,10 @@
 # ignore csv, pickle and zip files
 **.csv
 **.pickle
-**.pkl
 **.zip
+
+**.pem
+digital_ocean/*
 
 scrapy_engine/scrapy_engine/spiders/mongo.py
 **.pickle
