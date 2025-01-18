@@ -9,9 +9,6 @@ import json
 # import threading
 import time
 
-# from scrapy import signals# , Spider
-from scrapy.linkextractors import LinkExtractor
-
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError
 
@@ -20,6 +17,16 @@ import sys
 from .pickle_utils import PickleUtils
 sys.path.append('../server/../')
 from .mongo import Mongo
+
+
+from bs4 import BeautifulSoup
+# from scrapy import signals# , Spider
+from scrapy.linkextractors import LinkExtractor
+from dataclasses import dataclass
+
+@dataclass
+class Link:
+    url: str
 
 
 
@@ -85,20 +92,24 @@ class WorkerSpider(scrapy.Spider):
             # 1) get redirect_links
 
             # only send same domain links to mongo (if we ever need other links, we can get them from html content later)
-            '''
-                linkextractors is giving 0 links for sites like:`http://deshsanchar.com`
-                so combining linkextractor with bss4
-                from scrapy.linkextractors import LinkExtractor
-                links = LinkExtractor(deny_extensions=[]).extract_links(response)
-                print(len(links))
-            '''
-            from bs4 import BeautifulSoup
-            soup_links=[]
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                soup_links = [link['href'] for link in soup.find_all('a', href=True)]
-            links = list(set(LinkExtractor(deny_extensions=[]).extract_links(response) + soup_links))
             
+            
+            soup_links = []
+            links = LinkExtractor(deny_extensions=[]).extract_links(response)
+            if not links:
+                '''
+                    linkextractors is giving 0 links for sites like:`http://deshsanchar.com`
+                    so combining linkextractor with bss4
+                    from scrapy.linkextractors import LinkExtractor
+                    links = LinkExtractor(deny_extensions=[]).extract_links(response)
+                    print(len(links))
+                '''
+                # Extract links using BeautifulSoup
+                soup = BeautifulSoup(response.text, 'html.parser')
+                soup_links = [Link(link['href']) for link in soup.find_all('a', href=True)]
+                links = soup_links
+
+
 
             # Next Page to Follow: 
             redirect_links = []    # list for bulk upload
