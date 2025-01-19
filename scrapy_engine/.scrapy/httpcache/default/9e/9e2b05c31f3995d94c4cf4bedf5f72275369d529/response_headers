@@ -1,0 +1,13 @@
+Date: Sat, 18 Jan 2025 02:45:06 GMT
+Content-Type: text/html; charset=UTF-8
+Vary: Accept-Encoding
+Link: <https://himalpress.com/wp-json/>; rel="https://api.w.org/"
+X-Wp-Cache: EXPIRED
+Cf-Cache-Status: DYNAMIC
+Report-To: {"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v4?s=os14%2FEhMvfkkm6pzBwc6hYpuItU28k32rJlyz%2FcilsA0AWSglGjK8ZMXOJVCFN%2BR%2F4Yf1VjePoIuyEvJPoJUbXLJVQa4t84eyv8snUctk7sAV0DASOgRlPiAvjB7D00HEA%3D%3D"}],"group":"cf-nel","max_age":604800}
+Nel: {"success_fraction":0,"report_to":"cf-nel","max_age":604800}
+Server: cloudflare
+Cf-Ray: 903b3f17d9a5790d-KTM
+Content-Encoding: br
+Alt-Svc: h3=":443"; ma=86400
+Server-Timing: cfL4;desc="?proto=TCP&rtt=9374&min_rtt=7327&rtt_var=4623&sent=5&recv=7&lost=0&retrans=0&sent_bytes=2832&recv_bytes=838&delivery_rate=310329&cwnd=252&unsent_bytes=0&cid=9cd77caecde90219&ts=5336&x=0"

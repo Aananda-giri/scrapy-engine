@@ -1,0 +1,1474 @@
+INFO: Scrapy 2.11.2 started (bot: scrapy_engine)
+INFO: Versions: lxml 4.9.2.0, libxml2 2.9.14, cssselect 1.2.0, parsel 1.7.0, w3lib 2.1.1, Twisted 22.10.0, Python 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:40:32) [GCC 12.3.0], pyOpenSSL 23.0.0 (OpenSSL 3.0.7 1 Nov 2022), cryptography 39.0.0, Platform Linux-6.10.13-3-MANJARO-x86_64-with-glibc2.40
+INFO: Enabled addons:
+[]
+INFO: Telnet Password: 44bce14b541612b0
+INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.throttle.AutoThrottle',
+ 'scrapy_engine.extensions.BackgroundUploadExtension']
+INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 10,
+ 'AUTOTHROTTLE_START_DELAY': 2,
+ 'BOT_NAME': 'scrapy_engine',
+ 'CONCURRENT_REQUESTS': 4,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 2,
+ 'CONCURRENT_REQUESTS_PER_IP': 2,
+ 'DOWNLOAD_DELAY': 1,
+ 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'HTTPCACHE_ENABLED': True,
+ 'HTTPCACHE_EXPIRATION_SECS': 3600,
+ 'HTTPCACHE_IGNORE_HTTP_CODES': [500, 503, 504, 400, 403, 404],
+ 'LOGSTATS_INTERVAL': 0,
+ 'LOG_FILE': 'scrapy.log',
+ 'LOG_FORMAT': '%(levelname)s: %(message)s',
+ 'LOG_LEVEL': 'INFO',
+ 'MEMUSAGE_LIMIT_MB': 128,
+ 'MEMUSAGE_NOTIFY_MAIL': ['your-email@example.com'],
+ 'NEWSPIDER_MODULE': 'scrapy_engine.spiders',
+ 'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+ 'SPIDER_MODULES': ['scrapy_engine.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy_engine.middlewares.ScrapyEngineDownloaderMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats',
+ 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware']
+INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+INFO: Enabled item pipelines:
+[]
+INFO: Telnet console listening on 127.0.0.1:6023
+INFO: Peak memory usage is 98MiB
+INFO: Spider opened
+INFO: Starting background upload service...
+INFO: Starting Background Upload Service
+INFO: Background upload service started successfully
+INFO: Spider opened: default
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Closing spider (memusage_exceeded)
+INFO: Cleaning up background upload service...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Background upload service cleanup completed
+INFO: Initiating upload cycle
+INFO: Dumping Scrapy stats:
+{'downloader/request_bytes': 220,
+ 'downloader/request_count': 1,
+ 'downloader/request_method_count/GET': 1,
+ 'downloader/response_bytes': 82507,
+ 'downloader/response_count': 1,
+ 'downloader/response_status_count/200': 1,
+ 'elapsed_time_seconds': 60.130643,
+ 'finish_reason': 'memusage_exceeded',
+ 'finish_time': datetime.datetime(2025, 1, 17, 16, 0, 3, 140406, tzinfo=datetime.timezone.utc),
+ 'httpcache/firsthand': 1,
+ 'httpcache/miss': 1,
+ 'httpcache/store': 1,
+ 'httpcompression/response_bytes': 433803,
+ 'httpcompression/response_count': 1,
+ 'log_count/ERROR': 1,
+ 'log_count/INFO': 39,
+ 'memusage/limit_notified': 1,
+ 'memusage/limit_reached': 1,
+ 'memusage/max': 146350080,
+ 'memusage/startup': 103395328,
+ 'response_received_count': 1,
+ 'scheduler/dequeued': 1,
+ 'scheduler/dequeued/memory': 1,
+ 'scheduler/enqueued': 1,
+ 'scheduler/enqueued/memory': 1,
+ 'start_time': datetime.datetime(2025, 1, 17, 15, 59, 3, 9763, tzinfo=datetime.timezone.utc)}
+INFO: Spider closed (memusage_exceeded)
+INFO: No pickle files to zip
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Scrapy 2.11.2 started (bot: scrapy_engine)
+INFO: Versions: lxml 4.9.2.0, libxml2 2.9.14, cssselect 1.2.0, parsel 1.7.0, w3lib 2.1.1, Twisted 22.10.0, Python 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:40:32) [GCC 12.3.0], pyOpenSSL 23.0.0 (OpenSSL 3.0.7 1 Nov 2022), cryptography 39.0.0, Platform Linux-6.10.13-3-MANJARO-x86_64-with-glibc2.40
+INFO: Enabled addons:
+[]
+INFO: Telnet Password: 587c6b4ca7ca498b
+INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.throttle.AutoThrottle',
+ 'scrapy_engine.extensions.BackgroundUploadExtension']
+INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 10,
+ 'AUTOTHROTTLE_START_DELAY': 2,
+ 'BOT_NAME': 'scrapy_engine',
+ 'CONCURRENT_REQUESTS': 4,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 2,
+ 'CONCURRENT_REQUESTS_PER_IP': 2,
+ 'DOWNLOAD_DELAY': 1,
+ 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'HTTPCACHE_ENABLED': True,
+ 'HTTPCACHE_EXPIRATION_SECS': 3600,
+ 'HTTPCACHE_IGNORE_HTTP_CODES': [500, 503, 504, 400, 403, 404],
+ 'LOGSTATS_INTERVAL': 0,
+ 'LOG_FILE': 'scrapy.log',
+ 'LOG_FORMAT': '%(levelname)s: %(message)s',
+ 'LOG_LEVEL': 'INFO',
+ 'MEMUSAGE_LIMIT_MB': 128,
+ 'MEMUSAGE_NOTIFY_MAIL': ['your-email@example.com'],
+ 'NEWSPIDER_MODULE': 'scrapy_engine.spiders',
+ 'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+ 'SPIDER_MODULES': ['scrapy_engine.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy_engine.middlewares.ScrapyEngineDownloaderMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats',
+ 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware']
+INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+INFO: Enabled item pipelines:
+[]
+INFO: Telnet console listening on 127.0.0.1:6023
+INFO: Peak memory usage is 98MiB
+INFO: Spider opened
+INFO: Starting background upload service...
+INFO: Starting Background Upload Service
+INFO: Background upload service started successfully
+INFO: Spider opened: default
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Closing spider (memusage_exceeded)
+INFO: Cleaning up background upload service...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Scrapy 2.11.2 started (bot: scrapy_engine)
+INFO: Versions: lxml 4.9.2.0, libxml2 2.9.14, cssselect 1.2.0, parsel 1.7.0, w3lib 2.1.1, Twisted 22.10.0, Python 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:40:32) [GCC 12.3.0], pyOpenSSL 23.0.0 (OpenSSL 3.0.7 1 Nov 2022), cryptography 39.0.0, Platform Linux-6.10.13-3-MANJARO-x86_64-with-glibc2.40
+INFO: Enabled addons:
+[]
+INFO: Telnet Password: d24b8f61da20cdeb
+INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.throttle.AutoThrottle',
+ 'scrapy_engine.extensions.BackgroundUploadExtension']
+INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 10,
+ 'AUTOTHROTTLE_START_DELAY': 2,
+ 'BOT_NAME': 'scrapy_engine',
+ 'CONCURRENT_REQUESTS': 4,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 2,
+ 'CONCURRENT_REQUESTS_PER_IP': 2,
+ 'DOWNLOAD_DELAY': 1,
+ 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'HTTPCACHE_ENABLED': True,
+ 'HTTPCACHE_EXPIRATION_SECS': 3600,
+ 'HTTPCACHE_IGNORE_HTTP_CODES': [500, 503, 504, 400, 403, 404],
+ 'LOGSTATS_INTERVAL': 0,
+ 'LOG_FILE': 'scrapy.log',
+ 'LOG_FORMAT': '%(levelname)s: %(message)s',
+ 'LOG_LEVEL': 'INFO',
+ 'MEMUSAGE_LIMIT_MB': 128,
+ 'MEMUSAGE_NOTIFY_MAIL': ['your-email@example.com'],
+ 'NEWSPIDER_MODULE': 'scrapy_engine.spiders',
+ 'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+ 'SPIDER_MODULES': ['scrapy_engine.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy_engine.middlewares.ScrapyEngineDownloaderMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats',
+ 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware']
+INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+INFO: Enabled item pipelines:
+[]
+INFO: Telnet console listening on 127.0.0.1:6023
+INFO: Peak memory usage is 99MiB
+INFO: Spider opened
+INFO: Starting background upload service...
+INFO: Starting Background Upload Service
+INFO: Background upload service started successfully
+INFO: Spider opened: default
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Closing spider (memusage_exceeded)
+INFO: Cleaning up background upload service...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Background upload service cleanup completed
+INFO: Dumping Scrapy stats:
+{'downloader/request_bytes': 220,
+ 'downloader/request_count': 1,
+ 'downloader/request_method_count/GET': 1,
+ 'downloader/response_bytes': 82507,
+ 'downloader/response_count': 1,
+ 'downloader/response_status_count/200': 1,
+ 'elapsed_time_seconds': 60.128582,
+ 'finish_reason': 'memusage_exceeded',
+ 'finish_time': datetime.datetime(2025, 1, 17, 16, 50, 48, 834980, tzinfo=datetime.timezone.utc),
+ 'httpcache/hit': 1,
+ 'httpcompression/response_bytes': 433803,
+ 'httpcompression/response_count': 1,
+ 'log_count/ERROR': 1,
+ 'log_count/INFO': 38,
+ 'memusage/limit_notified': 1,
+ 'memusage/limit_reached': 1,
+ 'memusage/max': 162496512,
+ 'memusage/startup': 103997440,
+ 'response_received_count': 1,
+ 'scheduler/dequeued': 1,
+ 'scheduler/dequeued/memory': 1,
+ 'scheduler/enqueued': 1,
+ 'scheduler/enqueued/memory': 1,
+ 'start_time': datetime.datetime(2025, 1, 17, 16, 49, 48, 706398, tzinfo=datetime.timezone.utc)}
+INFO: Spider closed (memusage_exceeded)
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Scrapy 2.11.2 started (bot: scrapy_engine)
+INFO: Versions: lxml 4.9.2.0, libxml2 2.9.14, cssselect 1.2.0, parsel 1.7.0, w3lib 2.1.1, Twisted 22.10.0, Python 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:40:32) [GCC 12.3.0], pyOpenSSL 23.0.0 (OpenSSL 3.0.7 1 Nov 2022), cryptography 39.0.0, Platform Linux-6.10.13-3-MANJARO-x86_64-with-glibc2.40
+INFO: Enabled addons:
+[]
+INFO: Telnet Password: 9c74c72823f989ad
+INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.throttle.AutoThrottle',
+ 'scrapy_engine.extensions.BackgroundUploadExtension']
+INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 10,
+ 'AUTOTHROTTLE_START_DELAY': 2,
+ 'BOT_NAME': 'scrapy_engine',
+ 'CONCURRENT_REQUESTS': 4,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 2,
+ 'CONCURRENT_REQUESTS_PER_IP': 2,
+ 'DOWNLOAD_DELAY': 1,
+ 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'HTTPCACHE_ENABLED': True,
+ 'HTTPCACHE_EXPIRATION_SECS': 3600,
+ 'HTTPCACHE_IGNORE_HTTP_CODES': [500, 503, 504, 400, 403, 404],
+ 'LOGSTATS_INTERVAL': 0,
+ 'LOG_FILE': 'scrapy.log',
+ 'LOG_FORMAT': '%(levelname)s: %(message)s',
+ 'LOG_LEVEL': 'INFO',
+ 'MEMUSAGE_LIMIT_MB': 128,
+ 'MEMUSAGE_NOTIFY_MAIL': ['your-email@example.com'],
+ 'NEWSPIDER_MODULE': 'scrapy_engine.spiders',
+ 'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+ 'SPIDER_MODULES': ['scrapy_engine.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy_engine.middlewares.ScrapyEngineDownloaderMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats',
+ 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware']
+INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+INFO: Enabled item pipelines:
+[]
+INFO: Telnet console listening on 127.0.0.1:6023
+INFO: Peak memory usage is 101MiB
+INFO: Spider opened
+INFO: Starting background upload service...
+INFO: Starting Background Upload Service
+INFO: Background upload service started successfully
+INFO: Spider opened: default
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Closing spider (memusage_exceeded)
+INFO: Cleaning up background upload service...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Background upload service cleanup completed
+INFO: Dumping Scrapy stats:
+{'downloader/request_bytes': 219,
+ 'downloader/request_count': 1,
+ 'downloader/request_method_count/GET': 1,
+ 'downloader/response_bytes': 26749,
+ 'downloader/response_count': 1,
+ 'downloader/response_status_count/200': 1,
+ 'elapsed_time_seconds': 60.129286,
+ 'finish_reason': 'memusage_exceeded',
+ 'finish_time': datetime.datetime(2025, 1, 18, 2, 46, 1, 506884, tzinfo=datetime.timezone.utc),
+ 'httpcache/firsthand': 1,
+ 'httpcache/miss': 1,
+ 'httpcache/store': 1,
+ 'httpcompression/response_bytes': 187419,
+ 'httpcompression/response_count': 1,
+ 'log_count/ERROR': 1,
+ 'log_count/INFO': 40,
+ 'memusage/limit_notified': 1,
+ 'memusage/limit_reached': 1,
+ 'memusage/max': 160940032,
+ 'memusage/startup': 106700800,
+ 'response_received_count': 1,
+ 'scheduler/dequeued': 1,
+ 'scheduler/dequeued/memory': 1,
+ 'scheduler/enqueued': 1,
+ 'scheduler/enqueued/memory': 1,
+ 'start_time': datetime.datetime(2025, 1, 18, 2, 45, 1, 377598, tzinfo=datetime.timezone.utc)}
+INFO: Spider closed (memusage_exceeded)
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Scrapy 2.11.2 started (bot: scrapy_engine)
+INFO: Versions: lxml 4.9.2.0, libxml2 2.9.14, cssselect 1.2.0, parsel 1.7.0, w3lib 2.1.1, Twisted 22.10.0, Python 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:40:32) [GCC 12.3.0], pyOpenSSL 23.0.0 (OpenSSL 3.0.7 1 Nov 2022), cryptography 39.0.0, Platform Linux-6.10.13-3-MANJARO-x86_64-with-glibc2.40
+INFO: Enabled addons:
+[]
+INFO: Telnet Password: 771725091225f122
+INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.throttle.AutoThrottle',
+ 'scrapy_engine.extensions.BackgroundUploadExtension']
+INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 10,
+ 'AUTOTHROTTLE_START_DELAY': 2,
+ 'BOT_NAME': 'scrapy_engine',
+ 'CONCURRENT_REQUESTS': 4,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 2,
+ 'CONCURRENT_REQUESTS_PER_IP': 2,
+ 'DOWNLOAD_DELAY': 1,
+ 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'HTTPCACHE_ENABLED': True,
+ 'HTTPCACHE_EXPIRATION_SECS': 3600,
+ 'HTTPCACHE_IGNORE_HTTP_CODES': [500, 503, 504, 400, 403, 404],
+ 'LOGSTATS_INTERVAL': 0,
+ 'LOG_FILE': 'scrapy.log',
+ 'LOG_FORMAT': '%(levelname)s: %(message)s',
+ 'LOG_LEVEL': 'INFO',
+ 'MEMUSAGE_LIMIT_MB': 128,
+ 'MEMUSAGE_NOTIFY_MAIL': ['your-email@example.com'],
+ 'NEWSPIDER_MODULE': 'scrapy_engine.spiders',
+ 'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+ 'SPIDER_MODULES': ['scrapy_engine.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy_engine.middlewares.ScrapyEngineDownloaderMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats',
+ 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware']
+INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+INFO: Enabled item pipelines:
+[]
+INFO: Telnet console listening on 127.0.0.1:6023
+INFO: Peak memory usage is 101MiB
+INFO: Spider opened
+INFO: Starting background upload service...
+INFO: Starting Background Upload Service
+INFO: Background upload service started successfully
+INFO: Spider opened: default
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Closing spider (memusage_exceeded)
+INFO: Cleaning up background upload service...
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Background upload service cleanup completed
+INFO: Dumping Scrapy stats:
+{'downloader/request_bytes': 219,
+ 'downloader/request_count': 1,
+ 'downloader/request_method_count/GET': 1,
+ 'downloader/response_bytes': 26749,
+ 'downloader/response_count': 1,
+ 'downloader/response_status_count/200': 1,
+ 'elapsed_time_seconds': 60.125308,
+ 'finish_reason': 'memusage_exceeded',
+ 'finish_time': datetime.datetime(2025, 1, 18, 3, 6, 33, 294869, tzinfo=datetime.timezone.utc),
+ 'httpcache/hit': 1,
+ 'httpcompression/response_bytes': 187419,
+ 'httpcompression/response_count': 1,
+ 'log_count/ERROR': 1,
+ 'log_count/INFO': 38,
+ 'memusage/limit_notified': 1,
+ 'memusage/limit_reached': 1,
+ 'memusage/max': 154583040,
+ 'memusage/startup': 106708992,
+ 'response_received_count': 1,
+ 'scheduler/dequeued': 1,
+ 'scheduler/dequeued/memory': 1,
+ 'scheduler/enqueued': 1,
+ 'scheduler/enqueued/memory': 1,
+ 'start_time': datetime.datetime(2025, 1, 18, 3, 5, 33, 169561, tzinfo=datetime.timezone.utc)}
+INFO: Spider closed (memusage_exceeded)
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+INFO: Initiating upload cycle
+INFO: No pickle files to zip
+ERROR: Memory usage exceeded 128MiB. Shutting down Scrapy...
+ERROR: Unable to send mail: To=['your-email@example.com'] Cc=[] Subject="scrapy_engine terminated: memory usage exceeded 128.0MiB at exmachina" Attachs=0- Connection was refused by other side: 111: Connection refused.
+INFO: Initiating upload cycle
+INFO: No pickle files to zip

@@ -10,7 +10,7 @@ import json
 import time
 
 from scrapy.spidermiddlewares.httperror import HttpError
-from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError
+from twisted.internet.error import DNSLookupError, TCPTimedOutError, TimeoutError, ConnectionRefusedError
 
 import sys
 
@@ -130,8 +130,11 @@ class WorkerSpider(scrapy.Spider):
             # print(f'redirect_links:{redirect_links}')
             
             # limit html size
-            MAX_HTML_SIZE = 5 * 1024 * 1024  # 5 MB
+            MAX_HTML_SIZE = 7 * 1024 * 1024  # 7 MB
+            
+            # uncomment to debug
             print(f'url:{response.url}\n redirect_links: {len(redirect_links)} \n valid-content-len.{len(response.text) < MAX_HTML_SIZE}')
+            # print(f'\n\n response.url:{response.url}')
 
             # Comment to debug
             if len(response.text) > MAX_HTML_SIZE:
@@ -163,8 +166,7 @@ class WorkerSpider(scrapy.Spider):
                 if fetched_start_urls:
                     for url in fetched_start_urls:
                             # if url not in self.visited_urls:visited_urls.add(url)  # not necessary as we are fetching from mongo (filtered by server)
-                            yield scrapy.Request(url, callback=self.parse)
-            
+                            yield scrapy.Request(url, callback=self.parse, errback=self.errback_httpbin)
         else:
             pass
             # save status to mongo
@@ -201,6 +203,18 @@ class WorkerSpider(scrapy.Spider):
             error_data = {'url':response.url, 'timestamp':time.time(), 'status':'error', 'status_code':response.status, 'error_type':'TimeoutError'}
             self.mongo.append_error_data(error_data)
             # print(f'\n\n\n\n{error_data}\n\n\n\n\n\n')
+        elif failure.check(ConnectionRefusedError):
+            request = failure.request
+            self.logger.error('ConnectionRefusedError on %s', request.url)
+
+            error_data = {
+                'url': request.url,
+                'timestamp': time.time(),
+                'status': 'error',
+                'status_code': None,  # No status code for connection refused
+                'error_type': 'ConnectionRefusedError'
+            }
+            self.mongo.append_error_data(error_data)
         else:
             self.logger.error('Unknown error on %s', failure.request.url)
 
