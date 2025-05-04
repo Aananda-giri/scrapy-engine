@@ -1,0 +1,5 @@
+HF_TOKEN=<huggingface-token>
+
+# stores last file name that was processed and resumes from there
+RESUME=True
+RESUME_FILE=resume.json
