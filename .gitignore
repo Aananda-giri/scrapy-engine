@@ -27,3 +27,7 @@ server/extracted/*
 server/downloads/*
 
 servers/urls/the_plan.ipynb
+
+
+# archives
+**.archive
