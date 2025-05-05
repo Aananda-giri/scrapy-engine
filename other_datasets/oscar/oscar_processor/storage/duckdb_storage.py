@@ -30,7 +30,7 @@ class DuckDBStorage(BaseStorage):
         self.db_file = self.output_path / filename
         
         self.conn = None
-        self.keep_index = str(os.getenv("KEEP_DUCKDB_INDEX", "True")).lower() == "true"
+        self.keep_index = str(os.getenv("KEEP_DUCKDB_INDEX", "False")).lower() == "true"
         logger.info(f"Keep DuckDB index: {self.keep_index}")
         self.url_index = {}  # URL -> record mapping
         self.chunk_size = 100000  # For processing large data in chunks
@@ -40,7 +40,7 @@ class DuckDBStorage(BaseStorage):
         try:
             self.conn = duckdb.connect(str(self.db_file))
             
-            # Create table if it doesn't exist
+            # Create table if it doesn't exist - FIXED: Removed AUTOINCREMENT and made id generated using ROW_NUMBER()
             self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS oscar_data (
                     id INTEGER PRIMARY KEY,
@@ -165,11 +165,25 @@ class DuckDBStorage(BaseStorage):
                 'score': item.get('score', 0.0)  # Default to 0.0 if score is not provided
             } for item in batch])
             
-            # Insert data using DuckDB's append function (handles transaction internally)
+            # FIXED: Generate the ID using a subquery that gets the next available ID
+            # First, create a temporary table with the data
+            self.conn.execute("CREATE TEMPORARY TABLE temp_data AS SELECT * FROM df")
+            
+            # Now insert with generated IDs
             self.conn.execute("""
-                INSERT OR IGNORE INTO oscar_data (content, warc_target_uri, warc_date, content_type, score)
-                SELECT content, warc_target_uri, warc_date, content_type, score FROM df
+                INSERT OR IGNORE INTO oscar_data (id, content, warc_target_uri, warc_date, content_type, score)
+                SELECT
+                    COALESCE((SELECT MAX(id) FROM oscar_data), 0) + ROW_NUMBER() OVER(),
+                    content,
+                    warc_target_uri,
+                    warc_date,
+                    content_type,
+                    score
+                FROM temp_data
             """)
+            
+            # Clean up temporary table
+            self.conn.execute("DROP TABLE temp_data")
             
             # Update in-memory index if enabled
             if self.keep_index:
@@ -193,10 +207,10 @@ class DuckDBStorage(BaseStorage):
                             }
                             break
             
-            logger.debug(f"Saved {len(batch)} new records to DuckDB")
+            logger.info(f"Saved {len(batch)} new records to DuckDB")
             
         except Exception as e:
-            logger.error(f"Error saving batch to DuckDB: {e}")
+            logger.error(f"Error saving batch to DuckDB: {e} {batch[:5]}")
     
     def update_records(self, updates: List[Dict[str, Any]]) -> None:
         """

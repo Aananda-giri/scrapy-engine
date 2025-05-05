@@ -36,6 +36,7 @@ class ParquetStorage(BaseStorage):
         self._dataframe = None  # In-memory dataframe
         self.keep_csv_index = str(os.getenv("KEEP_CSV_INDEX", "False")).lower() == "true"
         logger.info(f"Keep CSV index: {self.keep_csv_index}")
+        self.chunk_size = 100000  # For processing large data in chunks
 
     def initialize(self) -> None:
         """Initialize Parquet file if needed."""
@@ -44,6 +45,12 @@ class ParquetStorage(BaseStorage):
                 # Load existing data into memory
                 self._dataframe = pd.read_parquet(self.file_path)
                 logger.info(f"Loaded existing Parquet file: {self.file_path}")
+                
+                # Add score column if it doesn't exist
+                if 'score' not in self._dataframe.columns:
+                    self._dataframe['score'] = 0.0
+                    logger.info("Added missing 'score' column to existing data")
+                    self._save_to_file()
             except Exception as e:
                 logger.error(f"Error loading Parquet file: {e}")
                 # Create new dataframe
@@ -61,7 +68,8 @@ class ParquetStorage(BaseStorage):
             'content': [],
             'warc_target_uri': [],
             'warc_date': [],
-            'content_type': []
+            'content_type': [],
+            'score': []  # Added score column
         })
         logger.info("Created new empty DataFrame for Parquet storage")
     
@@ -82,18 +90,25 @@ class ParquetStorage(BaseStorage):
             # Reset the index to get numeric row indexes
             df = self._dataframe.reset_index(drop=True)
             
-            for i, row in df.iterrows():
-                try:
-                    url = row['warc_target_uri']
-                    index[url] = {
-                        'row_idx': i,
-                        'content': row['content'],
-                        'warc_date': row['warc_date'],
-                        'content_type': row['content_type']
-                    }
-                except Exception as e:
-                    logger.error(f"Error indexing row {i}: {e}")
-                    continue
+            # Process in chunks for memory efficiency
+            total_rows = len(df)
+            for start_idx in range(0, total_rows, self.chunk_size):
+                end_idx = min(start_idx + self.chunk_size, total_rows)
+                chunk = df.iloc[start_idx:end_idx]
+                
+                for i, row in chunk.iterrows():
+                    try:
+                        url = row['warc_target_uri']
+                        index[url] = {
+                            'row_idx': i,
+                            'content': row['content'],
+                            'warc_date': row['warc_date'],
+                            'content_type': row['content_type'],
+                            'score': float(row.get('score', 0.0))  # Get score with default
+                        }
+                    except Exception as e:
+                        logger.error(f"Error indexing row {i}: {e}")
+                        continue
             
             logger.info(f"Loaded {len(index)} entries into index")
         except Exception as e:
@@ -124,8 +139,14 @@ class ParquetStorage(BaseStorage):
             return
             
         try:
-            # Convert batch to DataFrame
-            batch_df = pd.DataFrame(batch)
+            # Convert batch to DataFrame with score field
+            batch_df = pd.DataFrame([{
+                'content': item['content'],
+                'warc_target_uri': item['warc_target_uri'],
+                'warc_date': item['warc_date'],
+                'content_type': item['content_type'],
+                'score': item.get('score', 0.0)  # Default to 0.0 if score is not provided
+            } for item in batch])
             
             # Append to existing DataFrame
             self._dataframe = pd.concat([self._dataframe, batch_df], ignore_index=True)
@@ -141,7 +162,8 @@ class ParquetStorage(BaseStorage):
                         'row_idx': len(self.csv_index),
                         'content': item['content'],
                         'warc_date': item['warc_date'],
-                        'content_type': item['content_type']
+                        'content_type': item['content_type'],
+                        'score': item.get('score', 0.0)
                     }
             
             logger.debug(f"Saved {len(batch)} new records to Parquet")
@@ -174,11 +196,16 @@ class ParquetStorage(BaseStorage):
                     self._dataframe.at[url, 'warc_date'] = update['warc_date']
                     self._dataframe.at[url, 'content_type'] = update['content_type']
                     
+                    # Update score field
+                    new_score = update.get('new_score', update.get('score', self._dataframe.at[url, 'score']))
+                    self._dataframe.at[url, 'score'] = new_score
+                    
                     if self.keep_csv_index:
                         # Update memory index
                         self.csv_index[url]['content'] = update['content']
                         self.csv_index[url]['warc_date'] = update['warc_date']
                         self.csv_index[url]['content_type'] = update['content_type']
+                        self.csv_index[url]['score'] = new_score
                     
                     if 'old_score' in update and 'new_score' in update:
                         logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")
@@ -242,11 +269,29 @@ class ParquetStorage(BaseStorage):
         try:
             logger.info(f"Exporting Parquet data to CSV: {csv_path}")
             
-            if self._dataframe is not None and not self._dataframe.empty:
-                self._dataframe.to_csv(csv_path, index=False)
-                logger.info(f"Successfully exported {len(self._dataframe)} records to {csv_path}")
-            else:
+            if self._dataframe is None or self._dataframe.empty:
                 logger.warning("No data to export to CSV")
+                return
+                
+            # Process in chunks for large datasets
+            chunk_size = self.chunk_size
+            total_rows = len(self._dataframe)
+            
+            for start_idx in range(0, total_rows, chunk_size):
+                end_idx = min(start_idx + chunk_size, total_rows)
+                chunk = self._dataframe.iloc[start_idx:end_idx]
+                
+                # Write header only for the first chunk
+                chunk.to_csv(
+                    csv_path,
+                    mode='w' if start_idx == 0 else 'a',
+                    header=(start_idx == 0),
+                    index=False
+                )
+                
+                logger.debug(f"Exported rows {start_idx} to {end_idx} to CSV")
+            
+            logger.info(f"Successfully exported {total_rows} records to {csv_path}")
                 
         except Exception as e:
             logger.error(f"Error exporting Parquet data to CSV: {e}")

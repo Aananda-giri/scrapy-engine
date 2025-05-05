@@ -33,6 +33,7 @@ class SQLiteStorage(BaseStorage):
         self.csv_index = {}  # URL -> record mapping (for API compatibility)
         self.keep_csv_index = str(os.getenv("KEEP_CSV_INDEX", "False")).lower() == "true"
         logger.info(f"Keep CSV index: {self.keep_csv_index}")
+        self.chunk_size = 100000  # For processing large data in chunks
 
     def initialize(self) -> None:
         """Initialize SQLite database and create tables if needed."""
@@ -43,14 +44,15 @@ class SQLiteStorage(BaseStorage):
             # Enable WAL mode for better concurrent performance
             self.cursor.execute("PRAGMA journal_mode=WAL;")
             
-            # Create table if it doesn't exist
+            # Create table if it doesn't exist (now with score field)
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS oscar_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     content TEXT NOT NULL,
                     warc_target_uri TEXT UNIQUE NOT NULL,
                     warc_date TEXT,
-                    content_type TEXT
+                    content_type TEXT,
+                    score REAL DEFAULT 0.0
                 )
             ''')
             
@@ -59,6 +61,13 @@ class SQLiteStorage(BaseStorage):
                 CREATE INDEX IF NOT EXISTS idx_warc_target_uri 
                 ON oscar_data (warc_target_uri)
             ''')
+            
+            # Check if score column exists and add it if it doesn't
+            try:
+                self.cursor.execute("SELECT score FROM oscar_data LIMIT 1")
+            except sqlite3.OperationalError:
+                logger.info("Adding missing 'score' column to existing table")
+                self.cursor.execute("ALTER TABLE oscar_data ADD COLUMN score REAL DEFAULT 0.0")
             
             self.conn.commit()
             logger.info(f"Initialized SQLite database at {self.db_file}")
@@ -88,21 +97,21 @@ class SQLiteStorage(BaseStorage):
         logger.info("Building index from SQLite database")
         try:
             # Query all records but fetch in batches to manage memory
-            self.cursor.execute("SELECT id, content, warc_target_uri, warc_date, content_type FROM oscar_data")
+            self.cursor.execute("SELECT id, content, warc_target_uri, warc_date, content_type, score FROM oscar_data")
             
-            batch_size = 10000
-            batch = self.cursor.fetchmany(batch_size)
+            batch = self.cursor.fetchmany(self.chunk_size)
             
             while batch:
-                for row_id, content, url, warc_date, content_type in batch:
+                for row_id, content, url, warc_date, content_type, score in batch:
                     index[url] = {
                         'row_idx': row_id,
                         'content': content,
                         'warc_date': warc_date,
-                        'content_type': content_type
+                        'content_type': content_type,
+                        'score': float(score) if score is not None else 0.0
                     }
                 
-                batch = self.cursor.fetchmany(batch_size)
+                batch = self.cursor.fetchmany(self.chunk_size)
             
             logger.info(f"Loaded {len(index)} entries into index")
             
@@ -128,18 +137,19 @@ class SQLiteStorage(BaseStorage):
         # Fallback to database query
         try:
             self.cursor.execute(
-                "SELECT id, content, warc_date, content_type FROM oscar_data WHERE warc_target_uri = ?",
+                "SELECT id, content, warc_date, content_type, score FROM oscar_data WHERE warc_target_uri = ?",
                 (url,)
             )
             row = self.cursor.fetchone()
             
             if row:
-                row_id, content, warc_date, content_type = row
+                row_id, content, warc_date, content_type, score = row
                 record = {
                     'row_idx': row_id,
                     'content': content,
                     'warc_date': warc_date,
-                    'content_type': content_type
+                    'content_type': content_type,
+                    'score': float(score) if score is not None else 0.0
                 }
                 
                 # Update memory index
@@ -165,15 +175,22 @@ class SQLiteStorage(BaseStorage):
             # Use executemany for better performance
             self.cursor.executemany(
                 '''
-                INSERT OR IGNORE INTO oscar_data (content, warc_target_uri, warc_date, content_type)
-                VALUES (?, ?, ?, ?)
+                INSERT OR IGNORE INTO oscar_data (content, warc_target_uri, warc_date, content_type, score)
+                VALUES (?, ?, ?, ?, ?)
                 ''',
                 [
-                    (item['content'], item['warc_target_uri'], item['warc_date'], item['content_type'])
+                    (
+                        item['content'], 
+                        item['warc_target_uri'], 
+                        item['warc_date'], 
+                        item['content_type'],
+                        item.get('score', 0.0)
+                    )
                     for item in batch
                 ]
             )
             self.conn.commit()
+            
             if self.keep_csv_index:
                 # Update memory index for newly added items
                 for item in batch:
@@ -193,7 +210,8 @@ class SQLiteStorage(BaseStorage):
                                 'row_idx': row[0],
                                 'content': item['content'],
                                 'warc_date': item['warc_date'],
-                                'content_type': item['content_type']
+                                'content_type': item['content_type'],
+                                'score': item.get('score', 0.0)
                             }
                 
             logger.debug(f"Saved {len(batch)} new records to SQLite")
@@ -223,20 +241,36 @@ class SQLiteStorage(BaseStorage):
                 for update in batch:
                     url = update['warc_target_uri']
                     
-                    self.cursor.execute(
-                        '''
-                        UPDATE oscar_data
-                        SET content = ?, warc_date = ?, content_type = ?
-                        WHERE warc_target_uri = ?
-                        ''',
-                        (update['content'], update['warc_date'], update['content_type'], url)
-                    )
+                    # Set the score based on new_score, score, or keep existing
+                    new_score = update.get('new_score', update.get('score', None))
+                    
+                    if new_score is not None:
+                        self.cursor.execute(
+                            '''
+                            UPDATE oscar_data
+                            SET content = ?, warc_date = ?, content_type = ?, score = ?
+                            WHERE warc_target_uri = ?
+                            ''',
+                            (update['content'], update['warc_date'], update['content_type'], new_score, url)
+                        )
+                    else:
+                        self.cursor.execute(
+                            '''
+                            UPDATE oscar_data
+                            SET content = ?, warc_date = ?, content_type = ?
+                            WHERE warc_target_uri = ?
+                            ''',
+                            (update['content'], update['warc_date'], update['content_type'], url)
+                        )
+                    
                     if self.keep_csv_index:
                         # Update memory index
                         if url in self.csv_index:
                             self.csv_index[url]['content'] = update['content']
                             self.csv_index[url]['warc_date'] = update['warc_date']
                             self.csv_index[url]['content_type'] = update['content_type']
+                            if new_score is not None:
+                                self.csv_index[url]['score'] = new_score
                     
                     if 'old_score' in update and 'new_score' in update:
                         logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")
@@ -272,16 +306,15 @@ class SQLiteStorage(BaseStorage):
             logger.info(f"Exporting database to CSV: {csv_path}")
             
             # Query data in chunks to handle large databases
-            chunk_size = 100000
             offset = 0
             first_chunk = True
             
             while True:
                 query = f"""
-                    SELECT content, warc_target_uri, warc_date, content_type
+                    SELECT content, warc_target_uri, warc_date, content_type, score
                     FROM oscar_data
                     ORDER BY id
-                    LIMIT {chunk_size} OFFSET {offset}
+                    LIMIT {self.chunk_size} OFFSET {offset}
                 """
                 
                 df_chunk = pd.read_sql_query(query, self.conn)
@@ -298,7 +331,7 @@ class SQLiteStorage(BaseStorage):
                 )
                 
                 first_chunk = False
-                offset += chunk_size
+                offset += self.chunk_size
                 logger.debug(f"Exported {offset} records to CSV")
             
             logger.info(f"Successfully exported database to {csv_path}")

@@ -90,9 +90,10 @@ class OscarDataProcessor:
                     batch = []
                     
                     elapsed = time.time() - start_time
-                    logger.info(f"Processed {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
-                    logger.info(f"URLs: {self.urls_processed} processed, {self.urls_saved} saved, {self.urls_updated} updated")
-                
+                    logger.info(f"----------------------------------------------------------------------------------------")
+                    logger.info(f"Processed (saved) {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
+                    logger.info(f"URLs1: (saved) {self.urls_processed} processed, {self.urls_saved} saved, {self.urls_updated} updated")
+                    logger.info(f"----------------------------------------------------------------------------------------")
                 row_count += 1
                 self.urls_processed += 1
                 
@@ -159,21 +160,21 @@ class OscarDataProcessor:
                             except Exception as score_err:
                                 logger.error(f"Error calculating text scores: {score_err}")
                     
-                    # Process batches if they reach the batch size
-                    if len(batch) >= self.batch_size:
-                        self.storage.save_batch(batch)
-                        batch = []
+                    # # Process batches if they reach the batch size
+                    # if len(batch) >= self.batch_size:
+                    #     self.storage.save_batch(batch)
+                    #     batch = []
                     
                     if len(updates) >= self.batch_size:
                         self.storage.update_records(updates)
                         updates = []
                     
                     # Log progress periodically
-                    if self.urls_processed > 0 and self.urls_processed % 10000 == 0:
-                        self.bloom_filter.save()
+                    if self.urls_processed > 0 and self.urls_processed % 50000 == 0:
+                        # self.bloom_filter.save()
                         elapsed = time.time() - start_time
-                        logger.info(f"Processed {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
-                        logger.info(f"URLs: {self.urls_processed} processed, {self.urls_saved} saved, {self.urls_updated} updated")
+                        logger.info(f"Processed (not saved) {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
+                        logger.info(f"URLs2: (not saved) {self.urls_processed} processed2, {self.urls_saved} saved, {self.urls_updated} updated")
                 
                 except Exception as row_error:
                     logger.error(f"Error processing record {row_count}: {row_error}")
