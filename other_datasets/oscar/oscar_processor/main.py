@@ -26,7 +26,7 @@ def main():
     # Output and storage options
     parser.add_argument("--output", default="processed_data", help="Output directory for processed data")
     parser.add_argument("--bloom", default="oscar_community_bloom_filter.pkl", help="Path to bloom filter save file")
-    parser.add_argument("--storage-type", choices=["csv", "sqlite", "parquet"], default="sqlite", 
+    parser.add_argument("--storage-type", choices=["csv", "sqlite", "parquet", "duckdb"], default="duckdb", 
                         help="Storage backend to use")
     parser.add_argument("--storage-file", default=None, help="Custom filename for storage (uses default if not specified)")
     

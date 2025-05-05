@@ -197,8 +197,23 @@ class HFFunctions:
             
             except Exception as e:
                 logger.error(f"Error processing file {file_path}: {e}")
+                # delete file processed
+                try:
+                    os.remove(download_path)
+                except OSError as e:
+                    logger.error(f"Error deleting file {download_path}: {e}")
+                
                 # Continue with next file instead of breaking the whole process
                 continue
+            yield "end"
+            
+            
+            # delete file processed
+            try:
+                os.remove(download_path)
+            except OSError as e:
+                logger.error(f"Error deleting file {download_path}: {e}")
+        yield "the_end"
 
 
 if __name__ == "__main__":

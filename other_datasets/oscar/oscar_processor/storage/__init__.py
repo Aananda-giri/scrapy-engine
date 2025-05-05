@@ -8,12 +8,13 @@ from oscar_processor.storage.base import BaseStorage
 from oscar_processor.storage.csv_storage import CSVStorage
 from oscar_processor.storage.sqlite_storage import SQLiteStorage
 from oscar_processor.storage.parquet_storage import ParquetStorage
+from oscar_processor.storage.duckdb_storage import DuckDBStorage
 
 logger = logging.getLogger(__name__)
 
 
 def get_storage(
-    storage_type: Literal["csv", "sqlite", "parquet"],
+    storage_type: Literal["csv", "sqlite", "parquet", "duckdb"],
     output_path: str,
     filename: Optional[str] = None
 ) -> BaseStorage:
@@ -21,7 +22,7 @@ def get_storage(
     Factory function to get a storage instance based on type.
     
     Args:
-        storage_type: Type of storage ("csv", "sqlite", or "parquet")
+        storage_type: Type of storage ("csv", "sqlite", "parquet", or "duckdb")
         output_path: Directory to save data
         filename: Optional filename (will use default if None)
         
@@ -43,6 +44,10 @@ def get_storage(
         if filename is None:
             filename = "oscar_data.parquet"
         storage = ParquetStorage(output_path=output_path, filename=filename)
+    elif storage_type == "duckdb":
+        if filename is None:
+            filename = "oscar_data.duckdb"
+        storage = DuckDBStorage(output_path=output_path, filename=filename)
     else:
         raise ValueError(f"Invalid storage type: {storage_type}")
     

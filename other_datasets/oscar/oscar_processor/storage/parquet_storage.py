@@ -34,7 +34,9 @@ class ParquetStorage(BaseStorage):
         self.file_path = self.output_path / filename
         self.csv_index = {}  # URL -> record mapping (for API compatibility)
         self._dataframe = None  # In-memory dataframe
-        
+        self.keep_csv_index = str(os.getenv("KEEP_CSV_INDEX", "False")).lower() == "true"
+        logger.info(f"Keep CSV index: {self.keep_csv_index}")
+
     def initialize(self) -> None:
         """Initialize Parquet file if needed."""
         if self.file_path.exists():
@@ -49,9 +51,9 @@ class ParquetStorage(BaseStorage):
         else:
             # Create new dataframe
             self._create_empty_dataframe()
-            
-        # Build URL index
-        self.csv_index = self.build_index()
+        if self.keep_csv_index:
+            # Build URL index
+            self.csv_index = self.build_index()
     
     def _create_empty_dataframe(self):
         """Create an empty DataFrame with the required columns."""
@@ -131,15 +133,16 @@ class ParquetStorage(BaseStorage):
             # Save to file
             self._save_to_file()
             
-            # Update index
-            for item in batch:
-                url = item['warc_target_uri']
-                self.csv_index[url] = {
-                    'row_idx': len(self.csv_index),
-                    'content': item['content'],
-                    'warc_date': item['warc_date'],
-                    'content_type': item['content_type']
-                }
+            if self.keep_csv_index:
+                # Update index
+                for item in batch:
+                    url = item['warc_target_uri']
+                    self.csv_index[url] = {
+                        'row_idx': len(self.csv_index),
+                        'content': item['content'],
+                        'warc_date': item['warc_date'],
+                        'content_type': item['content_type']
+                    }
             
             logger.debug(f"Saved {len(batch)} new records to Parquet")
             
@@ -171,10 +174,11 @@ class ParquetStorage(BaseStorage):
                     self._dataframe.at[url, 'warc_date'] = update['warc_date']
                     self._dataframe.at[url, 'content_type'] = update['content_type']
                     
-                    # Update memory index
-                    self.csv_index[url]['content'] = update['content']
-                    self.csv_index[url]['warc_date'] = update['warc_date']
-                    self.csv_index[url]['content_type'] = update['content_type']
+                    if self.keep_csv_index:
+                        # Update memory index
+                        self.csv_index[url]['content'] = update['content']
+                        self.csv_index[url]['warc_date'] = update['warc_date']
+                        self.csv_index[url]['content_type'] = update['content_type']
                     
                     if 'old_score' in update and 'new_score' in update:
                         logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")

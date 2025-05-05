@@ -19,7 +19,12 @@ class BaseStorage(ABC):
         Save a batch of records to storage.
         
         Args:
-            batch: List of dictionaries containing record data
+            batch: List of dictionaries containing record data with the following fields:
+                - content: The text content of the record
+                - warc_target_uri: URL identifier for the record
+                - warc_date: Date when the record was created/retrieved
+                - content_type: MIME type of the content
+                - score: Quality score of the content (float)
         """
         pass
 
@@ -29,7 +34,14 @@ class BaseStorage(ABC):
         Update existing records in storage.
         
         Args:
-            updates: List of dictionaries containing updated record data
+            updates: List of dictionaries containing updated record data with the following fields:
+                - content: The updated text content
+                - warc_target_uri: URL identifier for the record to update
+                - warc_date: Updated date
+                - content_type: Updated MIME type
+                - old_score: Previous quality score (optional)
+                - new_score: New quality score (optional)
+                - score: Quality score if old/new not provided
         """
         pass
 
@@ -42,7 +54,13 @@ class BaseStorage(ABC):
             url: URL to look up
             
         Returns:
-            Record dictionary if found, None otherwise
+            Record dictionary if found with the following fields:
+                - content: The text content of the record
+                - warc_target_uri: URL identifier
+                - warc_date: Date when the record was created/retrieved
+                - content_type: MIME type of the content
+                - score: Quality score of the content (float)
+            Returns None if record not found
         """
         pass
 

@@ -1,3 +1,5 @@
+## note: parquet_storage and sqlite_storage are not updated, they lack data field: score
+
 # OSCAR Data Processor - Summary of Improvements
 
 ## Modular Architecture

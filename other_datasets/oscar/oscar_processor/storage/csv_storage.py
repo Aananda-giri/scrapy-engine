@@ -28,6 +28,9 @@ class CSVStorage(BaseStorage):
         self.output_path = Path(output_path)
         self.output_path.mkdir(exist_ok=True, parents=True)
         self.output_file = self.output_path / filename
+        
+        self.keep_csv_index = str(os.getenv("KEEP_CSV_INDEX", "False")).lower() == "true"
+        logger.info(f"Keep CSV index: {self.keep_csv_index}")
         self.csv_index = {}  # URL -> record mapping (not efficient for large files)
         self.chunk_size = 100000  # For processing large files in chunks
         
@@ -36,10 +39,11 @@ class CSVStorage(BaseStorage):
         if not self.output_file.exists():
             with open(self.output_file, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
-                writer.writerow(['content', 'warc_target_uri', 'warc_date', 'content_type'])
+                writer.writerow(['content', 'warc_target_uri', 'warc_date', 'content_type', 'score'])
         
-        # Build index from existing CSV
-        self.csv_index = self.build_index()
+        if self.keep_csv_index:
+            # Build index from existing CSV
+            self.csv_index = self.build_index()
     
     def build_index(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -64,8 +68,10 @@ class CSVStorage(BaseStorage):
                         index[row['warc_target_uri']] = {
                             'row_idx': len(index),
                             'content': row['content'],
+                            'warc_target_uri': row['warc_target_uri'],
                             'warc_date': row['warc_date'],
-                            'content_type': row['content_type']
+                            'content_type': row['content_type'],
+                            'score': row.get('score', 0.0)  # Default to 0.0 if score column doesn't exist
                         }
                     except Exception as e:
                         logger.error(f"Error indexing row: {e}")
@@ -107,16 +113,19 @@ class CSVStorage(BaseStorage):
                         item['content'],
                         item['warc_target_uri'],
                         item['warc_date'],
-                        item['content_type']
+                        item['content_type'],
+                        item.get('score', 0.0)  # Include the score field
                     ])
-                    
-                    # Update index
-                    self.csv_index[item['warc_target_uri']] = {
-                        'row_idx': len(self.csv_index),
-                        'content': item['content'],
-                        'warc_date': item['warc_date'],
-                        'content_type': item['content_type']
-                    }
+                    if self.keep_csv_index:
+                        # Update index
+                        self.csv_index[item['warc_target_uri']] = {
+                            'row_idx': len(self.csv_index),
+                            'content': item['content'],
+                            'warc_target_uri': item['warc_target_uri'],
+                            'warc_date': item['warc_date'],
+                            'content_type': item['content_type'],
+                            'score': item.get('score', 0.0)
+                        }
             
             logger.debug(f"Saved {len(batch)} new records to CSV")
         except Exception as e:
@@ -164,11 +173,15 @@ class CSVStorage(BaseStorage):
                     df.loc[mask, 'content'] = update['content']
                     df.loc[mask, 'warc_date'] = update['warc_date']
                     df.loc[mask, 'content_type'] = update['content_type']
+                    # Update score field
+                    df.loc[mask, 'score'] = update.get('new_score', update.get('score', 0.0))
                     
-                    # Update index
-                    self.csv_index[url]['content'] = update['content']
-                    self.csv_index[url]['warc_date'] = update['warc_date']
-                    self.csv_index[url]['content_type'] = update['content_type']
+                    if self.keep_csv_index:
+                        # Update index
+                        self.csv_index[url]['content'] = update['content']
+                        self.csv_index[url]['warc_date'] = update['warc_date']
+                        self.csv_index[url]['content_type'] = update['content_type']
+                        self.csv_index[url]['score'] = update.get('new_score', update.get('score', 0.0))
                     
                     if 'old_score' in update and 'new_score' in update:
                         logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")
@@ -198,7 +211,7 @@ class CSVStorage(BaseStorage):
             # Open output file for writing
             with open(temp_file, 'w', newline='', encoding='utf-8') as out_f:
                 writer = csv.writer(out_f)
-                writer.writerow(['content', 'warc_target_uri', 'warc_date', 'content_type'])
+                writer.writerow(['content', 'warc_target_uri', 'warc_date', 'content_type', 'score'])
                 
                 # Process input file in chunks
                 for chunk in pd.read_csv(self.output_file, chunksize=self.chunk_size):
@@ -213,23 +226,28 @@ class CSVStorage(BaseStorage):
                                 update['content'],
                                 url,
                                 update['warc_date'],
-                                update['content_type']
+                                update['content_type'],
+                                update.get('new_score', update.get('score', 0.0))  # Use new_score if available
                             ])
                             
-                            # Update index
-                            self.csv_index[url]['content'] = update['content']
-                            self.csv_index[url]['warc_date'] = update['warc_date']
-                            self.csv_index[url]['content_type'] = update['content_type']
+                            if self.keep_csv_index:
+                                # Update index
+                                self.csv_index[url]['content'] = update['content']
+                                self.csv_index[url]['warc_date'] = update['warc_date']
+                                self.csv_index[url]['content_type'] = update['content_type']
+                                self.csv_index[url]['score'] = update.get('new_score', update.get('score', 0.0))
                             
                             if 'old_score' in update and 'new_score' in update:
                                 logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")
                         else:
                             # Use existing values
+                            score_value = row.get('score', 0.0)  # Handle cases where score column might not exist
                             writer.writerow([
                                 row['content'],
                                 url,
                                 row['warc_date'],
-                                row['content_type']
+                                row['content_type'],
+                                score_value
                             ])
             
             # Replace original file with temporary file

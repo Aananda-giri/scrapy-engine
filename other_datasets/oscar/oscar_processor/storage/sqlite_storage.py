@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 from oscar_processor.storage.base import BaseStorage
-
+import os
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +31,9 @@ class SQLiteStorage(BaseStorage):
         self.cursor = None
         self.batch_size = 1000  # Number of records to commit at once
         self.csv_index = {}  # URL -> record mapping (for API compatibility)
-        
+        self.keep_csv_index = str(os.getenv("KEEP_CSV_INDEX", "False")).lower() == "true"
+        logger.info(f"Keep CSV index: {self.keep_csv_index}")
+
     def initialize(self) -> None:
         """Initialize SQLite database and create tables if needed."""
         try:
@@ -61,8 +63,9 @@ class SQLiteStorage(BaseStorage):
             self.conn.commit()
             logger.info(f"Initialized SQLite database at {self.db_file}")
             
-            # Build index
-            self.csv_index = self.build_index()
+            if self.keep_csv_index:
+                # Build index
+                self.csv_index = self.build_index()
             
         except Exception as e:
             logger.error(f"Error initializing SQLite database: {e}")
@@ -171,28 +174,28 @@ class SQLiteStorage(BaseStorage):
                 ]
             )
             self.conn.commit()
-            
-            # Update memory index for newly added items
-            for item in batch:
-                url = item['warc_target_uri']
-                
-                # Check if it was actually inserted (might have been ignored due to UNIQUE constraint)
-                if url not in self.csv_index:
-                    # Query the id of the newly inserted row
-                    self.cursor.execute(
-                        "SELECT id FROM oscar_data WHERE warc_target_uri = ?",
-                        (url,)
-                    )
-                    row = self.cursor.fetchone()
+            if self.keep_csv_index:
+                # Update memory index for newly added items
+                for item in batch:
+                    url = item['warc_target_uri']
                     
-                    if row:
-                        self.csv_index[url] = {
-                            'row_idx': row[0],
-                            'content': item['content'],
-                            'warc_date': item['warc_date'],
-                            'content_type': item['content_type']
-                        }
-            
+                    # Check if it was actually inserted (might have been ignored due to UNIQUE constraint)
+                    if url not in self.csv_index:
+                        # Query the id of the newly inserted row
+                        self.cursor.execute(
+                            "SELECT id FROM oscar_data WHERE warc_target_uri = ?",
+                            (url,)
+                        )
+                        row = self.cursor.fetchone()
+                        
+                        if row:
+                            self.csv_index[url] = {
+                                'row_idx': row[0],
+                                'content': item['content'],
+                                'warc_date': item['warc_date'],
+                                'content_type': item['content_type']
+                            }
+                
             logger.debug(f"Saved {len(batch)} new records to SQLite")
             
         except Exception as e:
@@ -228,12 +231,12 @@ class SQLiteStorage(BaseStorage):
                         ''',
                         (update['content'], update['warc_date'], update['content_type'], url)
                     )
-                    
-                    # Update memory index
-                    if url in self.csv_index:
-                        self.csv_index[url]['content'] = update['content']
-                        self.csv_index[url]['warc_date'] = update['warc_date']
-                        self.csv_index[url]['content_type'] = update['content_type']
+                    if self.keep_csv_index:
+                        # Update memory index
+                        if url in self.csv_index:
+                            self.csv_index[url]['content'] = update['content']
+                            self.csv_index[url]['warc_date'] = update['warc_date']
+                            self.csv_index[url]['content_type'] = update['content_type']
                     
                     if 'old_score' in update and 'new_score' in update:
                         logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")

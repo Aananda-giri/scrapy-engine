@@ -2,6 +2,7 @@
 Main processor class for OSCAR data.
 """
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Literal
@@ -24,7 +25,7 @@ class OscarDataProcessor:
         self, 
         output_path: str = "processed_data", 
         bloom_save_file: str = "oscar_community_bloom_filter.pkl",
-        storage_type: Literal["csv", "sqlite", "parquet"] = "sqlite",
+        storage_type: Literal["csv", "sqlite", "parquet", "duckdb"] = "duckdb",
         storage_filename: Optional[str] = None
     ):
         """
@@ -33,7 +34,7 @@ class OscarDataProcessor:
         Args:
             output_path: Directory to save processed files
             bloom_save_file: Path to save/load Bloom filter
-            storage_type: Type of storage backend to use ("csv", "sqlite", or "parquet")
+            storage_type: Type of storage backend to use ("csv", "sqlite", "parquet", or "duckdb")
             storage_filename: Custom filename for storage (uses default if None)
         """
         self.output_path = Path(output_path)
@@ -59,7 +60,10 @@ class OscarDataProcessor:
         self.urls_updated = 0
 
         self.batch_size = 1000
-    
+
+        self.ignore_duplicate = str(os.getenv("IGNORE_DUPLICATE", "False")).lower() == "true"
+        logger.info(f"Ignore duplicate: {self.ignore_duplicate}")
+
     def run(self) -> None:
         """
         Main method to run the entire pipeline using the yield_rows function.
@@ -77,28 +81,43 @@ class OscarDataProcessor:
             
             # Use the yield_rows function from HFFunctions
             for row in self.hf_functions.yield_rows():
+                if row == "end" or row == "the_end":
+                    # save bloom filter
+                    self.bloom_filter.save()
+                    
+                    # save storage
+                    self.storage.save_batch(batch)
+                    batch = []
+                    
+                    elapsed = time.time() - start_time
+                    logger.info(f"Processed {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
+                    logger.info(f"URLs: {self.urls_processed} processed, {self.urls_saved} saved, {self.urls_updated} updated")
+                
                 row_count += 1
                 self.urls_processed += 1
                 
                 try:
                     # Extract required fields from the record
-                    warc_headers = row.get('warc_headers', {})
-                    url = warc_headers.get('warc-target-uri', '')
-                    content = row.get('content', '')
-                    warc_date = warc_headers.get('warc-date', '')
-                    content_type = warc_headers.get('content-type', '')
+                    url = row.warc_headers.warc_target_uri
+                    content = row.content
+                    warc_date = row.warc_headers.warc_date
+                    content_type = row.warc_headers.content_type
                     
                     if not url:
                         continue
                     
                     # Check if URL is in bloom filter
                     if url not in self.bloom_filter:
+                        # Calculate score for the content
+                        score = self.text_scorer.score_text(content)['overall_score']
+                        
                         # URL not seen before, save it
                         batch.append({
                             'content': content,
                             'warc_target_uri': url,
                             'warc_date': warc_date,
-                            'content_type': content_type
+                            'content_type': content_type,
+                            'score': score  # Store the score in the record
                         })
                         
                         # Add URL to bloom filter
@@ -107,6 +126,10 @@ class OscarDataProcessor:
                         self.urls_saved += 1
                     
                     else:
+                        if self.ignore_duplicate:
+                            # ignore duplicate entries
+                            continue
+                        
                         # URL already seen, check if we should update it
                         existing_record = self.storage.get_record(url)
                         if existing_record:
@@ -114,7 +137,11 @@ class OscarDataProcessor:
                             
                             # Calculate scores for both pages
                             try:
-                                saved_score = self.text_scorer.score_text(saved_content)['overall_score']
+                                saved_score = existing_record.get('score')
+                                if saved_score is None:
+                                    # Calculate score if not already stored
+                                    saved_score = self.text_scorer.score_text(saved_content)['overall_score']
+                                
                                 new_score = self.text_scorer.score_text(content)['overall_score']
                                 
                                 # If new page has better score, update it
@@ -143,6 +170,7 @@ class OscarDataProcessor:
                     
                     # Log progress periodically
                     if self.urls_processed > 0 and self.urls_processed % 10000 == 0:
+                        self.bloom_filter.save()
                         elapsed = time.time() - start_time
                         logger.info(f"Processed {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
                         logger.info(f"URLs: {self.urls_processed} processed, {self.urls_saved} saved, {self.urls_updated} updated")
