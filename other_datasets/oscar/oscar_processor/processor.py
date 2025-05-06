@@ -59,7 +59,7 @@ class OscarDataProcessor:
         self.urls_saved = 0
         self.urls_updated = 0
 
-        self.batch_size = 1000
+        self.batch_size = 15000
 
         self.ignore_duplicate = str(os.getenv("IGNORE_DUPLICATE", "False")).lower() == "true"
         logger.info(f"Ignore duplicate: {self.ignore_duplicate}")
@@ -85,15 +85,16 @@ class OscarDataProcessor:
                     # save bloom filter
                     self.bloom_filter.save()
                     
-                    # save storage
-                    self.storage.save_batch(batch)
+                    # save in chunks
+                    for i in range(0, len(batch), self.batch_size):
+                        self.storage.save_batch(batch[i:i + self.batch_size])
                     batch = []
-                    
                     elapsed = time.time() - start_time
                     logger.info(f"----------------------------------------------------------------------------------------")
                     logger.info(f"Processed (saved) {self.urls_processed} records in {elapsed:.2f}s ({self.urls_processed/elapsed:.2f} records/s)")
                     logger.info(f"URLs1: (saved) {self.urls_processed} processed, {self.urls_saved} saved, {self.urls_updated} updated")
                     logger.info(f"----------------------------------------------------------------------------------------")
+                    continue
                 row_count += 1
                 self.urls_processed += 1
                 

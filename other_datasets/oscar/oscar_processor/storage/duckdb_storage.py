@@ -1,6 +1,3 @@
-"""
-DuckDB storage implementation for OSCAR data processor.
-"""
 import logging
 import os
 from pathlib import Path
@@ -33,19 +30,18 @@ class DuckDBStorage(BaseStorage):
         self.keep_index = str(os.getenv("KEEP_DUCKDB_INDEX", "False")).lower() == "true"
         logger.info(f"Keep DuckDB index: {self.keep_index}")
         self.url_index = {}  # URL -> record mapping
-        self.chunk_size = 100000  # For processing large data in chunks
+        self.chunk_size = 50000  # For processing large data in chunks
         
     def initialize(self) -> None:
         """Create DuckDB database and table if they don't exist."""
         try:
             self.conn = duckdb.connect(str(self.db_file))
             
-            # Create table if it doesn't exist - FIXED: Removed AUTOINCREMENT and made id generated using ROW_NUMBER()
+            # Create table without explicit ID column - let DuckDB handle it internally
             self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS oscar_data (
-                    id INTEGER PRIMARY KEY,
                     content TEXT,
-                    warc_target_uri VARCHAR UNIQUE,
+                    warc_target_uri VARCHAR,
                     warc_date VARCHAR,
                     content_type VARCHAR,
                     score DOUBLE
@@ -84,7 +80,7 @@ class DuckDBStorage(BaseStorage):
             
             # Query all data in chunks for memory efficiency
             cursor = self.conn.cursor()
-            cursor.execute("SELECT id, content, warc_target_uri, warc_date, content_type, score FROM oscar_data")
+            cursor.execute("SELECT content, warc_target_uri, warc_date, content_type, score FROM oscar_data")
             
             while True:
                 rows = cursor.fetchmany(self.chunk_size)
@@ -93,13 +89,12 @@ class DuckDBStorage(BaseStorage):
                     
                 for row in rows:
                     try:
-                        index[row[2]] = {  # row[2] is warc_target_uri
-                            'row_id': row[0],
-                            'content': row[1],
-                            'warc_target_uri': row[2],
-                            'warc_date': row[3],
-                            'content_type': row[4],
-                            'score': row[5]
+                        index[row[1]] = {  # row[1] is warc_target_uri
+                            'content': row[0],
+                            'warc_target_uri': row[1],
+                            'warc_date': row[2],
+                            'content_type': row[3],
+                            'score': row[4]
                         }
                     except Exception as e:
                         logger.error(f"Error indexing row: {e}")
@@ -142,6 +137,7 @@ class DuckDBStorage(BaseStorage):
                     
             except Exception as e:
                 logger.error(f"Error retrieving record for URL {url}: {e}")
+                raise  # Raise the exception to notify caller
                 
             return None
     
@@ -153,9 +149,18 @@ class DuckDBStorage(BaseStorage):
             batch: List of dictionaries containing record data
         """
         if not batch:
+            logger.warning("Attempted to save empty batch")
             return
             
         try:
+            # Log initial batch size
+            logger.info(f"Attempting to save batch of {len(batch)} records")
+            
+            # Check for duplicate URLs in this batch
+            # urls = [item['warc_target_uri'] for item in batch]
+            # if len(urls) != len(set(urls)):
+            #     logger.warning(f"Batch contains {len(urls) - len(set(urls))} duplicate URLs")
+            
             # Prepare data for insertion
             df = pd.DataFrame([{
                 'content': item['content'],
@@ -165,52 +170,49 @@ class DuckDBStorage(BaseStorage):
                 'score': item.get('score', 0.0)  # Default to 0.0 if score is not provided
             } for item in batch])
             
-            # FIXED: Generate the ID using a subquery that gets the next available ID
-            # First, create a temporary table with the data
-            self.conn.execute("CREATE TEMPORARY TABLE temp_data AS SELECT * FROM df")
+            # # Check if any of these URLs already exist in the database
+            # # Get list of existing URLs in this batch
+            # if len(urls) > 0:
+            #     placeholders = ', '.join(['?' for _ in urls])
+            #     query = f"SELECT warc_target_uri FROM oscar_data WHERE warc_target_uri IN ({placeholders})"
+            #     existing_urls = [row[0] for row in self.conn.execute(query, urls).fetchall()]
+                
+            #     if existing_urls:
+            #         logger.warning(f"Found {len(existing_urls)} URLs that already exist in the database")
+            #         # Filter out already existing URLs from the DataFrame
+            #         df = df[~df['warc_target_uri'].isin(existing_urls)]
             
-            # Now insert with generated IDs
-            self.conn.execute("""
-                INSERT OR IGNORE INTO oscar_data (id, content, warc_target_uri, warc_date, content_type, score)
-                SELECT
-                    COALESCE((SELECT MAX(id) FROM oscar_data), 0) + ROW_NUMBER() OVER(),
-                    content,
-                    warc_target_uri,
-                    warc_date,
-                    content_type,
-                    score
-                FROM temp_data
-            """)
+            if df.empty:
+                logger.warning("All records in batch already exist in the database")
+                return
             
-            # Clean up temporary table
-            self.conn.execute("DROP TABLE temp_data")
+            # Direct insert from DataFrame
+            self.conn.execute("BEGIN TRANSACTION")
+            row_count = len(df)
+            self.conn.execute("INSERT INTO oscar_data SELECT * FROM df")
+            self.conn.execute("COMMIT")
+            
+            logger.info(f"Successfully saved {row_count} new records to DuckDB")
             
             # Update in-memory index if enabled
             if self.keep_index:
-                # Get IDs of newly inserted records
-                urls = [item['warc_target_uri'] for item in batch]
-                placeholders = ', '.join(['?' for _ in urls])
-                query = f"SELECT id, warc_target_uri FROM oscar_data WHERE warc_target_uri IN ({placeholders})"
-                results = self.conn.execute(query, urls).fetchall()
-                
-                # Update index with newly inserted records
-                for row_id, url in results:
-                    for item in batch:
-                        if item['warc_target_uri'] == url:
-                            self.url_index[url] = {
-                                'row_id': row_id,
-                                'content': item['content'],
-                                'warc_target_uri': url,
-                                'warc_date': item['warc_date'],
-                                'content_type': item['content_type'],
-                                'score': item.get('score', 0.0)
-                            }
-                            break
-            
-            logger.info(f"Saved {len(batch)} new records to DuckDB")
+                for _, row in df.iterrows():
+                    url = row['warc_target_uri']
+                    self.url_index[url] = {
+                        'content': row['content'],
+                        'warc_target_uri': url,
+                        'warc_date': row['warc_date'],
+                        'content_type': row['content_type'],
+                        'score': row['score']
+                    }
             
         except Exception as e:
-            logger.error(f"Error saving batch to DuckDB: {e} {batch[:5]}")
+            self.conn.execute("ROLLBACK")
+            logger.error(f"Error saving batch to DuckDB: {e}")
+            # Show part of the batch for debugging
+            sample = str(batch[:2]) if batch else "Empty batch"
+            logger.error(f"Batch sample: {sample}")
+            raise  # Raise the exception to notify caller
     
     def update_records(self, updates: List[Dict[str, Any]]) -> None:
         """
@@ -228,11 +230,12 @@ class DuckDBStorage(BaseStorage):
             # Process updates in a single transaction for better performance
             self.conn.execute("BEGIN TRANSACTION")
             
+            update_count = 0
             for update in updates:
                 url = update['warc_target_uri']
                 
                 # Update record in database
-                self.conn.execute("""
+                result = self.conn.execute("""
                     UPDATE oscar_data 
                     SET content = ?, warc_date = ?, content_type = ?, score = ?
                     WHERE warc_target_uri = ?
@@ -244,21 +247,29 @@ class DuckDBStorage(BaseStorage):
                     url
                 ])
                 
-                # Update in-memory index if enabled
-                if self.keep_index and url in self.url_index:
-                    self.url_index[url]['content'] = update['content']
-                    self.url_index[url]['warc_date'] = update['warc_date']
-                    self.url_index[url]['content_type'] = update['content_type']
-                    self.url_index[url]['score'] = update.get('new_score', update.get('score', 0.0))
-                
-                if 'old_score' in update and 'new_score' in update:
-                    logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")
+                # Check if the update was successful
+                if result.fetchone()[0] > 0:
+                    update_count += 1
+                    
+                    # Update in-memory index if enabled
+                    if self.keep_index and url in self.url_index:
+                        self.url_index[url]['content'] = update['content']
+                        self.url_index[url]['warc_date'] = update['warc_date']
+                        self.url_index[url]['content_type'] = update['content_type']
+                        self.url_index[url]['score'] = update.get('new_score', update.get('score', 0.0))
+                    
+                    if 'old_score' in update and 'new_score' in update:
+                        logger.info(f"Updated URL: {url} - Score: {update['old_score']} -> {update['new_score']}")
+                else:
+                    logger.warning(f"Failed to update URL: {url} - Record not found")
             
             self.conn.execute("COMMIT")
+            logger.info(f"Successfully updated {update_count} out of {len(updates)} records")
             
         except Exception as e:
             logger.error(f"Error updating records in DuckDB: {e}")
             self.conn.execute("ROLLBACK")
+            raise  # Raise the exception to notify caller
     
     def close(self) -> None:
         """Close database connection."""
@@ -268,3 +279,4 @@ class DuckDBStorage(BaseStorage):
                 logger.debug("DuckDB connection closed")
             except Exception as e:
                 logger.error(f"Error closing DuckDB connection: {e}")
+                raise  # Raise the exception to notify caller
